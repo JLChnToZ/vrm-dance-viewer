@@ -1,0 +1,30 @@
+{
+  "name": "threejs-typescript-webpack",
+  "version": "1.0.0",
+  "description": "Easily use Three.js with TypeScript",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "webpack-dev-server --open --config webpack.dev.js",
+    "build": "webpack --config webpack.prod.js"
+  },
+  "author": "Johannes B.",
+  "license": "MIT",
+  "dependencies": {
+    "three": "latest"
+  },
+  "devDependencies": {
+    "awesome-typescript-loader": "^5.2.1",
+    "css-loader": "^3.2.0",
+    "file-loader": "^4.2.0",
+    "html-webpack-plugin": "^3.2.0",
+    "source-map-loader": "^0.2.4",
+    "style-loader": "^1.0.0",
+    "terser-webpack-plugin": "^1.4.1",
+    "typescript": "latest",
+    "webpack": "^4.39.2",
+    "webpack-cleanup-plugin": "^0.5.1",
+    "webpack-cli": "^3.3.7",
+    "webpack-dev-server": "^3.8.0",
+    "webpack-merge": "^4.2.1"
+  }
+}
