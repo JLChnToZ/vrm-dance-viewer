@@ -1,5 +1,7 @@
 ![TypeScript and Three.js made easy](https://i.imgur.com/6We17Nm.png)
 
+> :warning: Please make shure to update the repository after the installation
+
 ## Features
 
 - **TypeScript** support
