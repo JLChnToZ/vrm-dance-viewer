@@ -1,0 +1,282 @@
+import i18next from 'i18next';
+import * as URLRegex from 'url-regex';
+import * as h from 'hyperscript';
+import { VRMMeta, VRMSchema } from '@pixiv/three-vrm';
+import workerService from './worker-service';
+import { showModel as triggerShowModal } from '../utils/tocas-helpers';
+import { arrayBufferToObjectUrl } from '../utils/helper-functions';
+
+const urlRegex = URLRegex({ exact: true });
+
+const copyrightRegex = /^\s*(©|\([Cc]\)|\[[Cc]\])/;
+const emailRegex = /^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|'(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*')@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$/;
+
+let hasMeta = false;
+
+interface LicenseMeta {
+  badgeUrl?: string;
+  linkUrl?: string;
+  redistrube?: boolean;
+  attribution?: boolean;
+  modify?: boolean;
+}
+
+const licenseMetaMap: { [key in VRMSchema.MetaLicenseName]: LicenseMeta } = {
+  CC0: {
+    linkUrl: 'https://creativecommons.org/publicdomain/zero/1.0/',
+    badgeUrl: 'https://licensebuttons.net/l/zero/1.0/88x15.png',
+    redistrube: true,
+    attribution: false,
+    modify: true,
+  },
+  CC_BY: {
+    linkUrl: 'https://creativecommons.org/licenses/by/4.0/',
+    badgeUrl: 'https://licensebuttons.net/l/by/4.0/80x15.png',
+    redistrube: true,
+    attribution: true,
+    modify: true,
+  },
+  CC_BY_NC: {
+    linkUrl: 'https://creativecommons.org/licenses/by-nc/4.0/',
+    badgeUrl: 'https://licensebuttons.net/l/by-nc/4.0/80x15.png',
+    redistrube: true,
+    attribution: true,
+    modify: true,
+  },
+  CC_BY_NC_ND: {
+    linkUrl: 'https://creativecommons.org/licenses/by-nc-nd/4.0/',
+    badgeUrl: 'https://licensebuttons.net/l/by-nc-nd/4.0/80x15.png',
+    redistrube: true,
+    attribution: true,
+    modify: false,
+  },
+  CC_BY_NC_SA: {
+    linkUrl: 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+    badgeUrl: 'https://licensebuttons.net/l/by-nc-sa/4.0/80x15.png',
+    redistrube: true,
+    attribution: true,
+    modify: true,
+  },
+  CC_BY_ND: {
+    linkUrl: 'https://creativecommons.org/licenses/by-nd/4.0/',
+    badgeUrl: 'https://licensebuttons.net/l/by-nd/4.0/80x15.png',
+    redistrube: true,
+    attribution: true,
+    modify: false,
+  },
+  CC_BY_SA: {
+    linkUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    badgeUrl: 'https://licensebuttons.net/l/by-sa/4.0/80x15.png',
+    redistrube: true,
+    attribution: true,
+    modify: true,
+  },
+  Other: {},
+  Redistribution_Prohibited: {
+    redistrube: false,
+  },
+};
+
+export function displayMeta(meta: VRMMeta | null | undefined) {
+  const credits = document.querySelector<HTMLElement>('.credits');
+  if (!credits) return;
+  delete credits.dataset.lang;
+  credits.textContent = '';
+  if (!meta) return;
+  credits.appendChild(h('span',
+    meta.title,
+    meta.version ? i18next.t('version', meta) : undefined,
+    meta.author ? i18next.t('author', { author: formatCopyright(meta.author) }) : undefined,
+    (!meta.title && !meta.version && !meta.author) ? i18next.t('unknown_model_info') : undefined,
+    '. ',
+    getLicenseBlock(meta),
+  ));
+  prepareModel(meta);
+  document.title = `${meta.title || i18next.t('unknown_model')} - ${i18next.t('appName')}`;
+}
+
+export function showMoreInfo() {
+  if (hasMeta) triggerShowModal(document.querySelector<HTMLDialogElement>('#dialogmodal')!);
+}
+
+function formatCopyright(author?: string) {
+  return author ? copyrightRegex.test(author) ? author : `© ${author}` : '';
+}
+
+function getContactLink(contactInformation?: string) {
+  if (!contactInformation)
+    return undefined;
+  contactInformation = contactInformation.trim();
+  urlRegex.lastIndex = 0;
+  if (urlRegex.test(contactInformation))
+    return h('a', {
+      href: contactInformation,
+      target: '_blank'
+    }, contactInformation);
+  if (emailRegex.test(contactInformation))
+    return h('a', {
+      href: `mailto:${contactInformation}`,
+      target: '_blank'
+    }, contactInformation);
+  return contactInformation;
+}
+
+function getLicenseBlock(meta: VRMMeta) {
+  if (!meta.licenseName) return;
+  const license = licenseMetaMap[meta.licenseName];
+  const content = license.badgeUrl ? h('img.ts.middle.aligned.image', {
+    src: license.badgeUrl,
+    alt: i18next.t(`License_${meta.licenseName}`),
+  }) : i18next.t(`License_${meta.licenseName}`);
+  const linkUrl = meta.otherLicenseUrl || license.linkUrl;
+  return linkUrl ? h('a', {
+    href: linkUrl,
+    target: '_blank',
+  }, content) : content;
+}
+
+function prepareModel(meta: VRMMeta) {
+  const modal = document.querySelector<HTMLDialogElement>('#dialogmodal')!;
+  const header = modal.querySelector('.header')!;
+  let title = meta.title || '';
+  if (meta.version) title += i18next.t('version', meta);
+  header.textContent = i18next.t('mata_title', { title });
+  const body = modal.querySelector('.content')!;
+  let content = body;
+  body.textContent = '';
+  if (meta.texture) {
+    body.classList.add('image');
+    content = body.appendChild(h('div.description'));
+    body.appendChild(
+      h('div.ts.medium.rounded.image',
+        h('img', {
+          src: arrayBufferToObjectUrl(meta.texture as any),
+          onload: (e: Event) => URL.revokeObjectURL((e.target as HTMLImageElement).src),
+        }),
+      ),
+    );
+  } else
+    body.classList.remove('image');
+  const license = meta.licenseName ? licenseMetaMap[meta.licenseName] : undefined;
+  content.appendChild(
+    h('div.ts.list',
+      h('div.item',
+        h('div.content',
+          h('div.header', formatCopyright(meta.author) || i18next.t('default_author_header')),
+          getContactLink(meta.contactInformation),
+          h('br'),
+          getLicenseBlock(meta),
+        ),
+      ),
+      meta.reference ?
+        h('div.item',
+          h('div.content',
+            h('div.header', i18next.t('reference')),
+            getContactLink(meta.reference),
+          ),
+        ) :
+        undefined,
+      h('div.item',
+        h('div.content',
+          h('div.header', i18next.t('permissions')),
+          h('div.ts.three.column.relaxed.grid',
+            meta.allowedUserName ?
+              h('div.center.aligned.column',
+                getAllowUserIcon(meta.allowedUserName),
+                h('label', i18next.t('allowedUser', { state: `Meta_${meta.allowedUserName}` })),
+              ) :
+              undefined,
+            meta.sexualUssageName ?
+              h('div.center.aligned.column',
+                h('i.big.fitted.icons',
+                  h('i.venus.mars.circular.icon'),
+                  getMetaUsageIcon(meta.sexualUssageName)
+                ),
+                h('label', i18next.t('sexualUssage', { state: `Meta_${meta.sexualUssageName}` })),
+              ) :
+              undefined,
+            meta.violentUssageName ?
+              h('div.center.aligned.column',
+                h('i.big.fitted.icons',
+                  h('i.bomb.circular.icon'),
+                  getMetaUsageIcon(meta.violentUssageName)
+                ),
+                h('label', i18next.t('violentUssage', { state: `Meta_${meta.violentUssageName}` })),
+              ) :
+              undefined,
+            meta.commercialUssageName ?
+              h('div.center.aligned.column',
+                h('i.big.fitted.icons',
+                  h('i.dollar.circular.icon'),
+                  getMetaUsageIcon(meta.commercialUssageName)
+                ),
+                h('label', i18next.t('commercialUssage', { state: `Meta_${meta.commercialUssageName}` })),
+              ) :
+              undefined,
+            license?.redistrube != null ?
+              h('div.center.aligned.column',
+                h('i.big.fitted.icons',
+                  h('i.cloud.upload.circular.icon'),
+                  getMetaUsageIcon(license.redistrube)
+                ),
+                h('label', i18next.t('redistrube', { state: `Meta_${license.redistrube ? 'Allow' : 'Disallow'}` })),
+              ) :
+              undefined,
+            license?.modify != null ?
+              h('div.center.aligned.column',
+                h('i.big.fitted.icons',
+                  h('i.paint.brush.circular.icon'),
+                  getMetaUsageIcon(license.modify)
+                ),
+                h('label', i18next.t('modify', { state: `Meta_${license.modify ? 'Allow' : 'Disallow'}` })),
+              ) :
+              undefined,
+            license?.attribution != null ?
+              h('div.center.aligned.column',
+                h('i.big.fitted.icons',
+                  h('i.quote.right.circular.icon'),
+                  license.attribution ?
+                    h('i.corner.info.caution.icon') :
+                    h('i.corner.disabled.radio.icon')
+                ),
+                h('label', i18next.t('attribution', { state: `Attribution_${license.attribution ? 'Yes' : 'No'}` })),
+              ) :
+              undefined,
+            meta.otherPermissionUrl ?
+              h('div.center.aligned.column',
+                h('a', {
+                  href: meta.otherPermissionUrl,
+                  target: '_blank'
+                },
+                  h('i.big.fitted.external.circular.icon'),
+                  h('label', i18next.t('otherPermission')),
+                ),
+              ) :
+              undefined,
+          ),
+        ),
+      ),
+    ),
+  );
+  hasMeta = true;
+  triggerShowModal(modal);
+}
+
+function getMetaUsageIcon(usage: VRMSchema.MetaUssageName | boolean) {
+  switch(usage) {
+    case 'Allow': case true: return h('i.corner.positive.check.icon');
+    case 'Disallow': case false: return h('i.corner.negative.dont.icon');
+    default: return h('i.corner.question.icon');
+  }
+}
+
+function getAllowUserIcon(user: VRMSchema.MetaAllowedUserName) {
+  switch(user) {
+    case 'Everyone': return h('i.big.fitted.globe.circular.icon');
+    case 'ExplicitlyLicensedPerson': return h('i.big.fitted.users.circular.icon');
+    case 'OnlyAuthor': return h('i.big.fitted.lock.circular.icon');
+    default: return h('i.big.fitted.question.circular.icon');
+  }
+}
+
+workerService.on({ displayMeta });

@@ -3,14 +3,53 @@
   padding: 0;
 }
 
+*:focus {
+  outline: none;
+}
+
+body {
+  user-select: none;
+  cursor: default;
+}
+
 canvas {
   display: block;
   width: 100vw;
   height: 100vh;
+  z-index: 0;
+}
+
+.credits, .stats {
+  z-index: 10;
+}
+
+.stats {
+  bottom: 0;
+  right: 0;
+  border-top-left-radius: 0.25em;
 }
 
 .credits {
-  position: fixed;
   bottom: 0;
   left: 0;
+  border-top-right-radius: 0.25em;
+}
+
+.controls {
+  position: fixed;
+  top: 1em;
+  right: 1em;
+  z-index: 10;
+}
+
+.hidden {
+  position: fixed;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+img[src^="blob:"] {
+  pointer-events: none;
 }

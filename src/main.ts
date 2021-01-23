@@ -1,50 +1,103 @@
-import './main.css'
-import { Scene, PerspectiveCamera, WebGLRenderer, AmbientLight, Mesh, PlaneBufferGeometry, MeshBasicMaterial, DirectionalLight, Math as ThreeMath, DoubleSide, SpotLight, Object3D } from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import 'tocas-ui/dist/tocas.css';
+import './main.css';
+import './i18n';
+import { canvas, loadAnimation, loadModel, toggleAutoRotate, toggleLights, statsUpdate } from './host';
+import { showMoreInfo } from './host/meta-display';
+import { registerDropZone } from './utils/drag-drop';
+import { showSnack } from './utils/tocas-helpers';
+import { observeMediaQuery } from './utils/rx-helpers';
 
-const scene = new Scene()
-const camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
-camera.position.set(10, 5, 0)
+const loadingPromises: Promise<any>[] = [];
+let isLoading = false;
+let hasLoadModel = false;
 
-const renderer = new WebGLRenderer({
-  antialias: true,
-  alpha: true
-})
-renderer.setSize(window.innerWidth, window.innerHeight)
-document.body.appendChild(renderer.domElement)
-
-window.onresize = _ => {
-  renderer.setSize(window.innerWidth, window.innerHeight)
-  camera.aspect = window.innerWidth / window.innerHeight
-  camera.updateProjectionMatrix()
+function onFileSelected(files: FileList) {
+  let animFile: File | undefined;
+  let animType = '';
+  let modelFile: File | undefined;
+  for (const file of files) {
+    if (animFile && modelFile) return;
+    const name = file.name.toLowerCase();
+    if (name.endsWith('.vrm')) {
+      if (modelFile) continue;
+      modelFile = file;
+    } else if (name.endsWith('.vmd')) {
+      if (animFile) continue;
+      animFile = file;
+      animType = 'vmd';
+    } else if (name.endsWith('.bvh')) {
+      if (animFile) continue;
+      animFile = file;
+      animType = 'bvh';
+    }
+  }
+  if (modelFile) {
+    loadingPromises.push(loadModel(modelFile));
+    hasLoadModel = true;
+  }
+  if (animFile) loadingPromises.push(loadAnimation(animFile, animType));
+  if (hasLoadModel) triggerLoading();
 }
 
-const controls = new OrbitControls(camera, renderer.domElement)
-
-const ambientLight = new AmbientLight(-1, 2)
-scene.add(ambientLight)
-
-const loader = new GLTFLoader()
-let saucer: Object3D
-loader.load(
-  require('../assets/flying_saucer.glb'),
-  gltf => {
-    saucer = gltf.scene.children[0]
-    saucer.scale.setScalar(0.02)
-    scene.add(saucer)
-
-    requestAnimationFrame(animate)
-    console.log('Loaded flying saucer')
-  },
-  undefined,
-  err => console.error('Failed to load flying saucer model', err)
-)
-
-function animate(time: number) {
-  requestAnimationFrame(animate)
-  saucer.rotation.y = time / 5000
-  saucer.position.setY(2 + Math.cos(time / 1000))
-  controls.update()
-  renderer.render(scene, camera)
+async function triggerLoading() {
+  if (isLoading || !loadingPromises.length) return;
+  isLoading = true;
+  document.querySelector('#loading')?.classList.add('active');
+  while (loadingPromises.length) {
+    const wait = Array.from(loadingPromises, interceptLoadingError);
+    loadingPromises.length = 0;
+    await Promise.all(wait);
+  }
+  isLoading = false;
+  document.querySelector('#loading')?.classList.remove('active');
 }
+
+function interceptLoadingError<T>(promise: Promise<T>) {
+  return promise.catch(errorToSnackBar);
+}
+
+function errorToSnackBar(error?: any) {
+  let message: string | undefined;
+  if (typeof error?.message === 'string')
+    message = error.message;
+  if (message) showSnack(message);
+}
+
+registerDropZone(canvas, data => onFileSelected(data.files));
+
+document.querySelector('#lights')?.addEventListener('click', toggleLights);
+document.querySelector('#rotate')?.addEventListener('click', toggleAutoRotate);
+const fileSelect = document.querySelector<HTMLInputElement>('#selectfile');
+document.querySelector('#open')?.addEventListener('click', () => fileSelect?.click());
+fileSelect?.addEventListener('change', e => {
+  const fileSelect = e.target as HTMLInputElement;
+  if (fileSelect.files?.length) onFileSelected(fileSelect.files);
+  fileSelect.form?.reset();
+  fileSelect.blur();
+});
+document.querySelector('#info')?.addEventListener('click', showMoreInfo);
+
+const statsElm = document.querySelector('.stats')!;
+statsUpdate.subscribe(stat =>
+  statsElm.textContent = `F:${
+    stat.fps.toFixed(2)
+  } C:${
+    stat.render.calls
+  } P:${
+    stat.render.points
+  } L:${
+    stat.render.lines
+  } T:${
+    stat.render.triangles
+  } MT:${
+    stat.memory.textures
+  } MG:${
+    stat.memory.geometries
+  }`,
+);
+
+observeMediaQuery('(prefers-color-scheme:dark)').subscribe(matches =>
+  document.querySelectorAll('.ts:not(.dimmer)').forEach(element =>
+    element.classList[matches ? 'add' : 'remove']('inverted'),
+  ),
+);

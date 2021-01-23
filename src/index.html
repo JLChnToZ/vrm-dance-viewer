@@ -1,20 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
     <meta charset="UTF-8" />
-    <title>Three.js & TypeScript</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>VRM Dance Player</title>
   </head>
   <body>
     <noscript>JavaScript is required to view this page</noscript>
-    <span class="credits"
-      ><a href="https://poly.google.com/view/6hu2h8v78mO">Flying saucer</a>
-      <span>made by</span>
-      <a href="https://poly.google.com/user/4aEd8rQgKu2">Google</a>
-      <span>from</span>
-      <a href="https://poly.google.com/">Google Poly</a>
-      <span>is licensed by</span>
-      <a href="https://creativecommons.org/licenses/by/3.0/legalcode">CC-BY 3.0</a>
-      <span>(modified)</span>
+    <span class="ts bottom left attached mini credits label" data-lang="hint"></span>
+    <span class="ts bottom right attached mini stats label"></span>
+    <span class="ts icon controls compact mini menu">
+      <a class="item" id="open" data-tooltip-lang="open"><i class="folder open icon"></i></a>
+      <a class="item" id="info" data-tooltip-lang="info"><i class="notice circle icon"></i></a>
+      <div class="divider item"></div>
+      <a class="item" id="lights" data-tooltip-lang="lights"><i class="lightbulb icon"></i></a>
+      <a class="item" id="rotate" data-tooltip-lang="rotate"><i class="repeat icon"></i></a>
     </span>
+    <form class="hidden">
+      <input type="file" id="selectfile" tabindex="-1" multiple accept=".vrm,.vmd,.bvh" />
+    </form>
+    <div class="ts modals dimmer">
+      <dialog class="ts tiny closable modal" id="dialogmodal">
+        <div class="header"></div>
+        <div class="content"></div>
+        <div class="actions">
+          <button class="ts positive button" data-lang="ok"></button>
+        </div>
+      </dialog>
+    </div>
+    <div class="ts dimmer" id="loading">
+      <div class="ts big loader"></div>
+    </div>
   </body>
 </html>
