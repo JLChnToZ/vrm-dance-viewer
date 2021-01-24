@@ -82,17 +82,17 @@ interface IKS {
   maxAngle?: number;
 }
 
+const quaternion = new Quaternion();
+const targetPos = new Vector3();
+const targetVec = new Vector3();
+const effectorPos = new Vector3();
+const effectorVec = new Vector3();
+const linkPos = new Vector3();
+const linkScale = new Vector3();
+const axis = new Vector3();
+
 export default class VRMIKHandler {
   private static cache = new WeakMap<VRM, VRMIKHandler>();
-  private q = new Quaternion();
-  private targetPos = new Vector3();
-  private targetVec = new Vector3();
-  private effectorPos = new Vector3();
-  private effectorVec = new Vector3();
-  private linkPos = new Vector3();
-  private invLinkQ = new Quaternion();
-  private linkScale = new Vector3();
-  private axis = new Vector3();
 
   static get(model: VRM) {
     let handler = this.cache.get(model);
@@ -106,11 +106,13 @@ export default class VRMIKHandler {
   private targets = new Map<number, Object3D>();
   private iks = new Map<number, IKS>();
   private bones: Bone[];
+  private root: Object3D;
 
   private constructor(public model: VRM) {
     const { humanoid } = this.model;
     if (!humanoid) throw new Error('VRM does not contains humanoid');
     this.bones = boneNameOrder.map(humanoid.getBoneNode, humanoid) as Bone[];
+    this.root = this.bones[boneMap.get(BoneNames.Hips)!]?.parent ?? this.model.scene;
     const leftFootId = boneMap.get(BoneNames.LeftFoot)!;
     this.iks.set(leftFootId, {
       effector: leftFootId,
@@ -184,7 +186,7 @@ export default class VRMIKHandler {
     if (!target) {
       target = new Object3D();
       target.name = `${boneName}IK`;
-      this.model.scene.add(target);
+      this.root.add(target);
       this.targets.set(boneIndex, target);
     }
     return target;
@@ -201,7 +203,7 @@ export default class VRMIKHandler {
       const effector = this.bones[ik.effector];
       const target = this.targets.get(ik.target);
       if (!effector || !target) continue;
-      this.targetPos.setFromMatrixPosition(target.matrixWorld);
+      targetPos.setFromMatrixPosition(target.matrixWorld);
       const iteration = ik.iteration ?? 1;
       for (let j = 0; j < iteration; j++) {
         let rotated = false;
@@ -209,29 +211,29 @@ export default class VRMIKHandler {
           if (!enabled) break;
           const link = this.bones[index];
           link.matrixWorld.decompose(
-            this.linkPos,
-            this.invLinkQ,
-            this.linkScale
+            linkPos,
+            quaternion,
+            linkScale
           );
-          this.invLinkQ.inverse();
-          this.effectorPos.setFromMatrixPosition(effector.matrixWorld);
-          this.effectorVec
-            .subVectors(this.effectorPos, this.linkPos)
-            .applyQuaternion(this.invLinkQ)
+          quaternion.inverse();
+          effectorPos.setFromMatrixPosition(effector.matrixWorld);
+          effectorVec
+            .subVectors(effectorPos, linkPos)
+            .applyQuaternion(quaternion)
             .normalize();
-          this.targetVec
-            .subVectors(this.targetPos, this.linkPos)
-            .applyQuaternion(this.invLinkQ)
+          targetVec
+            .subVectors(targetPos, linkPos)
+            .applyQuaternion(quaternion)
             .normalize();
-          let angle = this.targetVec.dot(this.effectorVec);
+          let angle = targetVec.dot(effectorVec);
           if (angle > 1) angle = 1;
           else if (angle < -1) angle = -1;
           angle = Math.acos(angle);
           if (angle < 1e-5) continue;
           if (ik.minAngle != null && angle < ik.minAngle) angle = ik.minAngle;
           if (ik.maxAngle != null && angle > ik.maxAngle) angle = ik.maxAngle;
-          this.axis.crossVectors(this.effectorVec, this.targetVec).normalize();
-          link.quaternion.multiply(this.q.setFromAxisAngle(this.axis, angle));
+          axis.crossVectors(effectorVec, targetVec).normalize();
+          link.quaternion.multiply(quaternion.setFromAxisAngle(axis, angle));
           clampVector3ByRadian(link.rotation, rotationMin, rotationMax);
           link.updateMatrixWorld(true);
           rotated = true;

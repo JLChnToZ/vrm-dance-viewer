@@ -28,7 +28,7 @@ export function showModel(modal: HTMLDialogElement) {
     { once: true },
   );
   addEventListenerAndCache(cache, dimmer, 'click', (e: Event) => {
-    if (modal.classList.contains('closable') && e.currentTarget === dimmer)
+    if (modal.classList.contains('closable') && e.target === dimmer)
       hideModel(modal);
   });
   if (closeBtn)
