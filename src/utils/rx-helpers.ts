@@ -1,4 +1,4 @@
-import { fromEvent, Observable, queueScheduler, scheduled } from 'rxjs';
+import { concat, fromEvent, Observable } from 'rxjs';
 import { filter, map, mergeAll, shareReplay } from 'rxjs/operators';
 import { forEach, isTruely } from './helper-functions';
 
@@ -41,12 +41,11 @@ export function observeMediaQuery(query: string) {
   let observable = mqObservables.get(query);
   if (!observable) {
     const mq = matchMedia(query);
-    mqObservables.set(query, observable = scheduled([[
+    mqObservables.set(query, observable = concat([
       mq.matches,
     ], fromEvent<MediaQueryListEvent>(mq, 'change').pipe(
       map(e => e.matches),
-    )], queueScheduler).pipe(
-      mergeAll(),
+    )).pipe(
       shareReplay(1),
     ));
   }

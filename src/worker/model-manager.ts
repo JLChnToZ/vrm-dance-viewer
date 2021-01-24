@@ -1,8 +1,8 @@
 import { VRM, VRMSchema } from '@pixiv/three-vrm';
 import { extractThumbnailBlob } from '../utils/thumbnail-extractor';
-import { Observable, Subject, SubscriptionLike } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { blob2ArrayBuffer } from '../utils/helper-functions';
-import { Vector3 } from 'three';
+import { Vector3, SkeletonHelper } from 'three';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { deltaTimeObservable } from './scene';
 import { controls } from './scene/controls';
@@ -35,10 +35,12 @@ export async function load(data: ArrayBufferLike | string) {
     const modelUpdateOvservable = deltaTimeObservable.pipe(takeUntil(vrmUnloadSubject));
     modelUpdateOvservable.subscribe(model.update.bind(model));
     const target = model.humanoid?.getBoneNode(VRMSchema.HumanoidBoneName.Hips);
-    if (target)
+    if (target) {
       modelUpdateOvservable.subscribe(t =>
         controls?.target.lerp(target.getWorldPosition(v3), Math.min(1, t))
       );
+      model.scene.add(new SkeletonHelper(target));
+    }
     notifyMeta(model);
     vrmLoadSubject.next(model);
   } catch(error) {
