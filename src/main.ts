@@ -1,8 +1,10 @@
 import 'tocas-ui/dist/tocas.css';
+import 'dseg/css/dseg.css';
 import './main.css';
 import './i18n';
-import { canvas, loadAnimation, loadModel, toggleAutoRotate, toggleLights, statsUpdate } from './host';
+import { canvas, loadAnimation, loadModel, toggleAutoRotate, toggleLights } from './host';
 import { showMoreInfo } from './host/meta-display';
+import registerStats from './host/status';
 import { registerDropZone } from './utils/drag-drop';
 import { showSnack } from './utils/tocas-helpers';
 import { observeMediaQuery } from './utils/rx-helpers';
@@ -77,23 +79,10 @@ fileSelect?.addEventListener('change', e => {
 });
 document.querySelector('#info')?.addEventListener('click', showMoreInfo);
 
-const statsElm = document.querySelector('.stats')!;
-statsUpdate.subscribe(stat =>
-  statsElm.textContent = `F:${
-    stat.fps.toFixed(2)
-  } C:${
-    stat.render.calls
-  } P:${
-    stat.render.points
-  } L:${
-    stat.render.lines
-  } T:${
-    stat.render.triangles
-  } MT:${
-    stat.memory.textures
-  } MG:${
-    stat.memory.geometries
-  }`,
+registerStats(
+  document.getElementById('fps')!,
+  document.getElementById('draw-call')!,
+  document.getElementById('face-count')!,
 );
 
 observeMediaQuery('(prefers-color-scheme:dark)').subscribe(matches =>

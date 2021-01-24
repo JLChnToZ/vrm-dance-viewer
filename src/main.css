@@ -53,3 +53,26 @@ canvas {
 img[src^="blob:"] {
   pointer-events: none;
 }
+
+.number {
+  position: relative;
+  font-family: 'DSEG7-Classic', sans-serif;
+  vertical-align: top;
+  text-align: right;
+}
+
+.number::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  content: '';
+  font-family: 'DSEG7-Classic';
+  opacity: 0.2;
+}
+
+.number.n4-digits { width: 4em; }
+.number.n4-digits::before { content: '8.8.8.8.'; }
+.number.n5-digits { width: 5em; }
+.number.n5-digits::before { content: '8.8.8.8.8.'; }
+.number.n7-digits { width: 7em; }
+.number.n7-digits::before { content: '8.8.8.8.8.8.8.'; }

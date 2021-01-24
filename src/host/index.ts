@@ -62,26 +62,4 @@ export function toggleAutoRotate() {
   return void workerService.trigger('toggleRotate');
 }
 
-export interface Stats {
-  render: {
-    calls: number;
-    frame: number;
-    lines: number;
-    points: number;
-    triangles: number;
-  };
-  memory: {
-    geometries: number;
-    textures: number;
-    heap: {
-      jsHeapSizeLimit?: number;
-      totalJSHeapSize?: number;
-      usedJSHeapSize?: number;
-    };
-  };
-  fps: number;
-}
-
-export const statsUpdate = workerService.observe<Stats>('stats').pipe(shareReplay(1));
-
 workerService.on({ warn: alert.bind(window) });

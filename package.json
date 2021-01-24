@@ -17,6 +17,7 @@
     "@types/i18next": "latest",
     "@types/resize-observer-browser": "latest",
     "@types/webpack-env": "latest",
+    "dseg": "latest",
     "hyperscript": "latest",
     "i18next": "latest",
     "i18next-browser-languagedetector": "latest",
