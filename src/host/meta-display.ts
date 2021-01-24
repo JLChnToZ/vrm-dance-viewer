@@ -93,6 +93,26 @@ export function displayMeta(meta: VRMMeta | null | undefined) {
   ));
   prepareModel(meta);
   document.title = `${meta.title || i18next.t('unknown_model')} - ${i18next.t('appName')}`;
+  setIcon(meta.texture as any);
+}
+
+function setIcon(icon?: Blob | BlobPart | string | null) {
+  const metaElement =
+    document.querySelector<HTMLLinkElement>('link[rel=icon]') ??
+    document.head.appendChild(h('link', { rel: 'icon' }));
+  const { dataset } = metaElement;
+  if (!dataset.defaultHref)
+    dataset.defaultHref = metaElement.href || 'about:blank';
+  else if (metaElement.href.startsWith('blob:'))
+    URL.revokeObjectURL(metaElement.href);
+  if (typeof icon === 'string')
+    metaElement.href = icon;
+  else if (icon instanceof Blob)
+    metaElement.href = URL.createObjectURL(icon);
+  else if (icon != null)
+    metaElement.href = arrayBufferToObjectUrl(icon);
+  else
+    metaElement.href = dataset.defaultHref || 'about:blank';
 }
 
 export function showMoreInfo() {
