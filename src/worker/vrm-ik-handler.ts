@@ -4,7 +4,6 @@ import { Quaternion } from 'three/src/math/Quaternion';
 import { Vector3 } from 'three/src/math/Vector3';
 import { Euler } from 'three/src/math/Euler';
 import { Bone } from 'three/src/objects/Bone';
-import { AxesHelper } from 'three/src/helpers/AxesHelper';
 import { VRM, VRMSchema } from '@pixiv/three-vrm';
 
 const BoneNames = VRMSchema.HumanoidBoneName;
@@ -187,10 +186,8 @@ export default class VRMIKHandler {
     if (!target) {
       target = new Object3D();
       target.name = `${boneName}IK`;
-      target.add(new AxesHelper(0.15));
       this.root.add(target);
       this.targets.set(boneIndex, target);
-      this.bones[ik.effector]?.add(new AxesHelper(0.15));
     }
     return target;
   }
