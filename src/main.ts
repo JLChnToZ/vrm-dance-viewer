@@ -1,5 +1,3 @@
-import 'tocas-ui/dist/tocas.css';
-import 'dseg/css/dseg.css';
 import './main.css';
 import './i18n';
 import { canvas, loadAnimation, loadModel, toggleAutoRotate, toggleLights } from './host';
