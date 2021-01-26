@@ -47,7 +47,7 @@ export async function load(data: ArrayBufferLike | string) {
   await deltaTimeObservable.pipe(take(2)).toPromise();
 }
 
-export async function loadVRM(data: ArrayBufferLike | string) {
+export function loadVRM(data: ArrayBufferLike | string) {
   return new Promise<GLTF>((resolve, reject) =>
     gltfLoader.parse(data, '', resolve, ({ error }) => reject(error)),
   ).then(VRM.from);
