@@ -48,7 +48,9 @@ img[src^="blob:"] {
 .number {
   position: relative;
   font-family: 'DSEG7-Classic', sans-serif;
-  vertical-align: top;
+  font-style: italic;
+  font-size: 170%;
+  vertical-align: text-top;
   text-align: right;
 }
 
@@ -61,9 +63,9 @@ img[src^="blob:"] {
   opacity: 0.2;
 }
 
-.number.n4-digits { width: 4em; }
+.number.n4-digits { width: 4ch; }
 .number.n4-digits::before { content: '8.8.8.8.'; }
-.number.n5-digits { width: 5em; }
+.number.n5-digits { width: 5ch; }
 .number.n5-digits::before { content: '8.8.8.8.8.'; }
-.number.n7-digits { width: 7em; }
+.number.n7-digits { width: 7ch; }
 .number.n7-digits::before { content: '8.8.8.8.8.8.8.'; }

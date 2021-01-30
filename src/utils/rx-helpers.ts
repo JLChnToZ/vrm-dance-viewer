@@ -1,5 +1,5 @@
 import { concat, fromEvent, Observable } from 'rxjs';
-import { filter, map, mergeAll, shareReplay } from 'rxjs/operators';
+import { filter, map, mergeAll, pluck, shareReplay } from 'rxjs/operators';
 import { forEach, isTruely } from './helper-functions';
 
 export function observeMutation(target: Node, options?: MutationObserverInit) {
@@ -41,13 +41,10 @@ export function observeMediaQuery(query: string) {
   let observable = mqObservables.get(query);
   if (!observable) {
     const mq = matchMedia(query);
-    mqObservables.set(query, observable = concat([
-      mq.matches,
-    ], fromEvent<MediaQueryListEvent>(mq, 'change').pipe(
-      map(e => e.matches),
-    )).pipe(
-      shareReplay(1),
-    ));
+    mqObservables.set(query, observable = concat(
+      [mq.matches],
+      fromEvent<MediaQueryListEvent>(mq, 'change').pipe(pluck('matches')),
+    ).pipe(shareReplay(1)));
   }
   return observable;
 }
