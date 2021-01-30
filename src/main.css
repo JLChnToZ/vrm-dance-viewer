@@ -50,6 +50,7 @@ img[src^="blob:"] {
   font-family: 'DSEG7-Classic', sans-serif;
   font-style: italic;
   font-size: 170%;
+  letter-spacing: normal;
   vertical-align: text-top;
   text-align: right;
 }
