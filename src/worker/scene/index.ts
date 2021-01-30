@@ -38,7 +38,7 @@ export function enable(enable?: boolean) {
 
 export const deltaTimeObservable = new Subject<number>();
 let frameCount = 0;
-let timeCount = 0;
+let lastStatsUpdate = 0;
 
 update();
 function update(time = lastTime) {
@@ -53,17 +53,17 @@ function update(time = lastTime) {
     renderer.render(scene, camera);
   }
   frameCount++;
-  timeCount += deltaTime;
 }
 
 function notifyRendererStats({ info }: WebGLRenderer) {
+  const timestamp = performance.now();
   WorkerMessageService.host.trigger('stats', {
     render: info.render,
     memory: info.memory,
-    fps: frameCount / timeCount,
+    fps: frameCount / (timestamp - lastStatsUpdate) * 1000,
   });
   frameCount = 0;
-  timeCount = 0;
+  lastStatsUpdate = timestamp;
 }
 
 WorkerMessageService.host.on({ handleResize });
