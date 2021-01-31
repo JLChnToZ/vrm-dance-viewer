@@ -4,6 +4,7 @@
     "target": "es6",
     "lib": ["DOM", "DOM.Iterable", "ESNext", "WebWorker", "WebWorker.ImportScripts"],
     "importHelpers": true,
+    "esModuleInterop": true,
     "sourceMap": true,
     "strict": true,
     "baseUrl": ".",

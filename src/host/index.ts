@@ -1,7 +1,7 @@
 import { RemoteCanvasHost } from '../utils/remote-canvas';
 import { blob2ArrayBuffer } from '../utils/helper-functions';
+import { observeVisibilty } from '../utils/rx-helpers';
 import workerService from './worker-service';
-import { shareReplay } from 'rxjs/operators';
 
 export const canvas = document.body.appendChild(document.createElement('canvas'));
 canvas.addEventListener('contextmenu', e => e.preventDefault());
@@ -61,5 +61,9 @@ export function toggleLights() {
 export function toggleAutoRotate() {
   return void workerService.trigger('toggleRotate');
 }
+
+observeVisibilty.subscribe(
+  state => workerService.trigger('enable', state === 'visible'),
+);
 
 workerService.on({ warn: alert.bind(window) });

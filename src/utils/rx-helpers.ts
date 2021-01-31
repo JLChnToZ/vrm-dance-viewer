@@ -1,4 +1,4 @@
-import { concat, fromEvent, Observable } from 'rxjs';
+import { concat, from, fromEvent, Observable } from 'rxjs';
 import { filter, map, mergeAll, pluck, shareReplay } from 'rxjs/operators';
 import { forEach, isTruely } from './helper-functions';
 
@@ -48,3 +48,11 @@ export function observeMediaQuery(query: string) {
   }
   return observable;
 }
+
+export const observeVisibilty = (self.document ? concat(
+  [document.visibilityState],
+  fromEvent(document, 'visibilitychange').pipe(
+    pluck<Event, VisibilityState>('currentTarget', 'visibilityState'),
+  ),
+) : from<VisibilityState[]>(['hidden']))
+.pipe(shareReplay(1));

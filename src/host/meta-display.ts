@@ -1,6 +1,6 @@
 import i18next from 'i18next';
-import * as URLRegex from 'url-regex';
-import * as h from 'hyperscript';
+import URLRegex from 'url-regex';
+import h from 'hyperscript';
 import { VRMMeta, VRMSchema } from '@pixiv/three-vrm';
 import workerService from './worker-service';
 import { showModel as triggerShowModal } from '../utils/tocas-helpers';

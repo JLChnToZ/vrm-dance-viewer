@@ -66,4 +66,4 @@ function notifyRendererStats({ info }: WebGLRenderer) {
   lastStatsUpdate = timestamp;
 }
 
-WorkerMessageService.host.on({ handleResize });
+WorkerMessageService.host.on({ handleResize, enable });

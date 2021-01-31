@@ -1,4 +1,4 @@
-import * as h from 'hyperscript';
+import h from 'hyperscript';
 import { getOrCreate, addEventListenerAndCache, delay } from './helper-functions';
 
 const eventCache = new WeakMap<HTMLDialogElement, [EventTarget, string, EventListenerOrEventListenerObject][]>();
