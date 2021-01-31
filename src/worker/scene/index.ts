@@ -31,6 +31,8 @@ export function handleResize(width: number, height: number) {
 
 export function enable(enable?: boolean) {
   if (enable != null) {
+    if (isEnabled !== enable && enable)
+      requestAnimationFrame(update);
     isEnabled = enable;
   }
   return isEnabled;
@@ -40,15 +42,18 @@ export const deltaTimeObservable = new Subject<number>();
 let frameCount = 0;
 let lastStatsUpdate = 0;
 
-update();
+if (isEnabled) requestAnimationFrame(update);
 function update(time = lastTime) {
+  if (!isEnabled) return;
+  requestAnimationFrame(update);
   const deltaTime = (time - lastTime) / 1000;
   lastTime = time;
-  requestAnimationFrame(update);
   deltaTimeObservable.next(deltaTime);
-  if (controls) setCenter(controls.target)
-  if (renderer && isEnabled) {
-    controls?.update();
+  if (renderer) {
+    if (controls) {
+      setCenter(controls.target);
+      controls.update();
+    }
     updateLights(deltaTime);
     renderer.render(scene, camera);
   }
@@ -57,7 +62,7 @@ function update(time = lastTime) {
 
 function notifyRendererStats({ info }: WebGLRenderer) {
   const timestamp = performance.now();
-  WorkerMessageService.host.trigger('stats', {
+  if (isEnabled) WorkerMessageService.host.trigger('stats', {
     render: info.render,
     memory: info.memory,
     fps: frameCount / (timestamp - lastStatsUpdate) * 1000,

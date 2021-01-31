@@ -1,8 +1,8 @@
-const merge = require('webpack-merge')
-const common = require('./webpack.common.js')
-const webpack = require('webpack')
+const merge = require('webpack-merge');
+const common = require('./webpack.common.js');
+const webpack = require('webpack');
 
-const TerserPlugin = require('terser-webpack-plugin')
+const TerserPlugin = require('terser-webpack-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 
 module.exports = merge(common, {
@@ -11,7 +11,7 @@ module.exports = merge(common, {
   plugins: [
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': '"production"'
-    })
+    }),
   ],
 
   optimization: {
@@ -20,11 +20,14 @@ module.exports = merge(common, {
         test: /\.js(\?.*)?$/i,
         terserOptions: {
           compress: {
+            arguments: true,
             drop_console: true,
             keep_fargs: false,
             ecma: 6,
+            passes: 3,
             toplevel: true,
             module: true,
+            unsafe: true,
           },
         },
         extractComments: {
@@ -33,7 +36,9 @@ module.exports = merge(common, {
           banner: licenseFile => `License information can be found in ${licenseFile}.`,
         },
       }),
-      new OptimizeCSSAssetsPlugin({}),
+      new OptimizeCSSAssetsPlugin({
+        test: /\.css(\?.*)?$/i,
+      }),
     ],
     minimize: true,
     runtimeChunk: {
