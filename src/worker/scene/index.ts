@@ -9,15 +9,13 @@ import { init as initControls, controls } from './controls';
 import { setCenter } from './floor';
 import { WebGLRenderer } from 'three';
 import { WorkerMessageService } from '../../utils/message-service';
-
-let isEnabled = true;
-let lastTime = 0;
+import { LoopManager } from '../../utils/loop-manager';
 
 remoteCanvasObservable.pipe(take(1)).subscribe(canvas => {
   initRenderer(canvas.undelyOffscreenCanvas);
   if(typeof self !== 'undefined' && self.document == null)
     (self as any).document = {};
-  initControls(canvas, isEnabled);
+  initControls(canvas, true);
   handleResize(canvas.width, canvas.height);
   setInterval(notifyRendererStats, 1000, renderer);
 });
@@ -29,25 +27,12 @@ export function handleResize(width: number, height: number) {
   camera.updateProjectionMatrix();
 }
 
-export function enable(enable?: boolean) {
-  if (enable != null) {
-    if (isEnabled !== enable && enable)
-      requestAnimationFrame(update);
-    isEnabled = enable;
-  }
-  return isEnabled;
-}
-
 export const deltaTimeObservable = new Subject<number>();
 let frameCount = 0;
 let lastStatsUpdate = 0;
 
-if (isEnabled) requestAnimationFrame(update);
-function update(time = lastTime) {
-  if (!isEnabled) return;
-  requestAnimationFrame(update);
-  const deltaTime = (time - lastTime) / 1000;
-  lastTime = time;
+const loopManager = new LoopManager(deltaTime => {
+  deltaTime /= 1000;
   deltaTimeObservable.next(deltaTime);
   if (renderer) {
     if (controls) {
@@ -58,11 +43,20 @@ function update(time = lastTime) {
     renderer.render(scene, camera);
   }
   frameCount++;
+}, true);
+
+export function enable(enable?: boolean) {
+  if (enable != null) {
+    loopManager.enabled = enable;
+    if (controls)
+      controls.enabled = enable;
+  }
+  return loopManager.enabled;
 }
 
 function notifyRendererStats({ info }: WebGLRenderer) {
   const timestamp = performance.now();
-  if (isEnabled) WorkerMessageService.host.trigger('stats', {
+  if (loopManager.enabled) WorkerMessageService.host.trigger('stats', {
     render: info.render,
     memory: info.memory,
     fps: frameCount / (timestamp - lastStatsUpdate) * 1000,
