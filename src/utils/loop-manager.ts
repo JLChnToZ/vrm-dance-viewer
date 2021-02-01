@@ -33,11 +33,7 @@ export class LoopManager {
   }
 
   private _tick(time: number) {
-    if (!this._enabled) {
-      if (this._handle != null)
-        delete this._handle;
-      return;
-    }
+    if (!this._enabled) return delete this._handle;
     this._handle = requestAnimationFrame(this._tick);
     const lastTime = this._lastTime;
     this._lastTime = time;

@@ -25,8 +25,8 @@ export function random(min: number, max: number) {
 }
 
 export function lerp(min: number, max: number, v: number) {
-  if (v > 1) return max;
-  if (v < 0) return min;
+  if (v >= 1) return max;
+  if (v <= 0 || Number.isNaN(v)) return min;
   return v * (max - min) + min;
 }
 

@@ -112,6 +112,7 @@ class VRMModelNoiseChannel {
     if (reset && this.firstRun)
       this.bone.quaternion.multiply(tempQ.setFromEuler(tempEular.set(this.x, this.y, this.z)).inverse());
     deltaTime *= this.lerpScale;
+    if (deltaTime > this.lerpScale) deltaTime = this.lerpScale;
     if (this.xmax !== this.xmin)
       this.x = lerp(this.x, random(this.xmin, this.xmax), deltaTime);
     if (this.ymax !== this.ymin)

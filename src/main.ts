@@ -6,6 +6,7 @@ import registerStats from './host/status';
 import { registerDropZone } from './utils/drag-drop';
 import { showSnack } from './utils/tocas-helpers';
 import { observeMediaQuery } from './utils/rx-helpers';
+import { interceptEvent } from './utils/helper-functions';
 
 const loadingPromises: Promise<any>[] = [];
 let isLoading = false;
@@ -88,3 +89,9 @@ observeMediaQuery('(prefers-color-scheme:dark)').subscribe(matches =>
     element.classList[matches ? 'add' : 'remove']('inverted'),
   ),
 );
+
+window.addEventListener('dragover', e => {
+  interceptEvent(e);
+  if (e.dataTransfer) e.dataTransfer.dropEffect = 'none';
+});
+window.addEventListener('drop', interceptEvent);
