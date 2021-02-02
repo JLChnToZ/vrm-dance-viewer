@@ -1,15 +1,12 @@
 import i18next from 'i18next';
-import URLRegex from 'url-regex';
+import { parseLink } from '../utils/link-parser';
 import h from 'hyperscript';
 import { VRMMeta, VRMSchema } from '@pixiv/three-vrm';
 import workerService from './worker-service';
 import { showModel as triggerShowModal } from '../utils/tocas-helpers';
-import { arrayBufferToObjectUrl } from '../utils/helper-functions';
-
-const urlRegex = URLRegex({ exact: true });
+import { arrayBufferToObjectUrl, emptyArray } from '../utils/helper-functions';
 
 const copyrightRegex = /^\s*(©|\([Cc]\)|\[[Cc]\])/;
-const emailRegex = /^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|'(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*')@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$/;
 
 let hasMeta = false;
 
@@ -123,24 +120,6 @@ function formatCopyright(author?: string) {
   return author ? copyrightRegex.test(author) ? author : `© ${author}` : '';
 }
 
-function getContactLink(contactInformation?: string) {
-  if (!contactInformation)
-    return undefined;
-  contactInformation = contactInformation.trim();
-  urlRegex.lastIndex = 0;
-  if (urlRegex.test(contactInformation))
-    return h('a', {
-      href: contactInformation,
-      target: '_blank'
-    }, contactInformation);
-  if (emailRegex.test(contactInformation))
-    return h('a', {
-      href: `mailto:${contactInformation}`,
-      target: '_blank'
-    }, contactInformation);
-  return contactInformation;
-}
-
 function getLicenseBlock(meta: VRMMeta) {
   if (!meta.licenseName) return;
   const license = licenseMetaMap[meta.licenseName];
@@ -183,7 +162,7 @@ function prepareModel(meta: VRMMeta) {
       h('div.item',
         h('div.content',
           h('div.header', formatCopyright(meta.author) || i18next.t('default_author_header')),
-          getContactLink(meta.contactInformation),
+          ...parseLink(meta.contactInformation),
           h('br'),
           getLicenseBlock(meta),
         ),
@@ -192,7 +171,7 @@ function prepareModel(meta: VRMMeta) {
         h('div.item',
           h('div.content',
             h('div.header', i18next.t('reference')),
-            getContactLink(meta.reference),
+            ...parseLink(meta.reference),
           ),
         ) :
         undefined,

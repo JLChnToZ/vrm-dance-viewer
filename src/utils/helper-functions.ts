@@ -7,7 +7,7 @@ export const emptyArray = Object.freeze({
   [Symbol.toStringTag]: 'EmptyArray',
   next() { return { done: true } as IteratorReturnResult<any>; },
   [Symbol.iterator]() { return this; },
-} as ArrayLike<any> & IterableIterator<any>);
+}) as ArrayLike<any> & IterableIterator<any>;
 
 export interface Resolver<T> {
   resolve(value?: T | PromiseLike<T>): void;

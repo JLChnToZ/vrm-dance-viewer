@@ -23,6 +23,7 @@
     "@pixiv/three-vrm": "latest",
     "@types/hyperscript": "latest",
     "@types/i18next": "latest",
+    "@types/linkify-it": "latest",
     "@types/resize-observer-browser": "latest",
     "@types/webpack-env": "latest",
     "dseg": "latest",
@@ -31,12 +32,13 @@
     "i18next-browser-languagedetector": "latest",
     "i18next-http-backend": "latest",
     "i18next-webpack-backend": "latest",
+    "linkify-it": "latest",
     "mmd-parser": "latest",
     "rxjs": "latest",
     "three": "latest",
+    "tlds": "latest",
     "tocas-ui": "latest",
-    "tslib": "latest",
-    "url-regex": "latest"
+    "tslib": "latest"
   },
   "devDependencies": {
     "awesome-typescript-loader": "^5",
