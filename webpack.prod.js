@@ -1,4 +1,4 @@
-const merge = require('webpack-merge');
+const { merge } = require('webpack-merge');
 const common = require('./webpack.common.js');
 const webpack = require('webpack');
 
@@ -17,13 +17,14 @@ module.exports = merge(common, {
   optimization: {
     minimizer: [
       new TerserPlugin({
-        test: /\.js(\?.*)?$/i,
+        test: /\.js$/i,
+        parallel: true,
         terserOptions: {
           compress: {
             arguments: true,
             drop_console: true,
             keep_fargs: false,
-            ecma: 6,
+            ecma: 2015,
             passes: 3,
             toplevel: true,
             module: true,
@@ -37,15 +38,19 @@ module.exports = merge(common, {
         },
       }),
       new OptimizeCSSAssetsPlugin({
-        test: /\.css(\?.*)?$/i,
+        test: /\.css$/i,
       }),
     ],
     minimize: true,
+    concatenateModules: true,
+    usedExports: true,
+    sideEffects: true,
+    mangleExports: 'size',
     runtimeChunk: {
       name: 'runtime',
     },
     splitChunks: {
       name: 'chunk',
-    }
-  }
-})
+    },
+  },
+});

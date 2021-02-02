@@ -3,7 +3,7 @@ import { take } from 'rxjs/operators';
 import { initWorkerContext, remoteCanvasObservable } from '../../utils/remote-canvas';
 import { camera } from './camera';
 import { scene } from './scene';
-import { update as updateLights } from './lights';
+import { init as initLights } from './lights';
 import { init as initRenderer, renderer } from './renderer';
 import { init as initControls, controls } from './controls';
 import { setCenter } from './floor';
@@ -11,39 +11,34 @@ import { WebGLRenderer } from 'three';
 import { WorkerMessageService } from '../../utils/message-service';
 import { LoopManager } from '../../utils/loop-manager';
 
-remoteCanvasObservable.pipe(take(1)).subscribe(canvas => {
-  initRenderer(canvas.undelyOffscreenCanvas);
-  if(typeof self !== 'undefined' && self.document == null)
-    (self as any).document = {};
-  initControls(canvas, true);
-  handleResize(canvas.width, canvas.height);
-  setInterval(notifyRendererStats, 1000, renderer);
-});
-initWorkerContext();
-
-export function handleResize(width: number, height: number) {
-  if (renderer) renderer.setSize(width, height, false);
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
-}
-
 export const deltaTimeObservable = new Subject<number>();
 let frameCount = 0;
 let lastStatsUpdate = 0;
 
 const loopManager = new LoopManager(deltaTime => {
-  deltaTime /= 1000;
-  deltaTimeObservable.next(deltaTime);
-  if (renderer) {
-    if (controls) {
-      setCenter(controls.target);
-      controls.update();
-    }
-    updateLights(deltaTime);
-    renderer.render(scene, camera);
-  }
+  deltaTimeObservable.next(deltaTime / 1000);
+  renderer?.render(scene, camera);
   frameCount++;
 }, true);
+
+initLights(deltaTimeObservable);
+
+remoteCanvasObservable.pipe(take(1)).subscribe(canvas => {
+  if(typeof self !== 'undefined' && self.document == null)
+    (self as any).document = {};
+  const renderer = initRenderer(canvas.undelyOffscreenCanvas);
+  const controls = initControls(canvas, deltaTimeObservable, true);
+  handleResize(canvas.width, canvas.height);
+  deltaTimeObservable.subscribe(() => setCenter(controls.target));
+  setInterval(notifyRendererStats, 1000, renderer);
+});
+initWorkerContext();
+
+export function handleResize(width: number, height: number) {
+  renderer?.setSize(width, height, false);
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+}
 
 export function enable(enable?: boolean) {
   if (enable != null) {

@@ -1,4 +1,5 @@
 import { Color, DirectionalLight, Fog, HemisphereLight } from 'three';
+import { Observable } from 'rxjs';
 import { BACKGROUND_COLOR, BACKGROUND_COLOR_DIM, scene } from './scene';
 import { WorkerMessageService } from '../../utils/message-service';
 
@@ -15,6 +16,10 @@ scene.add(ambiantLight);
 const light = new DirectionalLight(0xffffff);
 light.position.set(1, 1, -1).normalize();
 scene.add(light);
+
+export function init(updater: Observable<number>) {
+  updater.subscribe(update);
+}
 
 export function update(deltaTime: number) {
   currentIntensity += (targetIntensity - currentIntensity) * Math.min(1, deltaTime * 4);

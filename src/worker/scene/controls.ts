@@ -1,11 +1,12 @@
 import { MOUSE, TOUCH } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { Observable } from 'rxjs';
 import { camera } from './camera';
 import { WorkerMessageService } from '../../utils/message-service';
 
 export let controls: OrbitControls | undefined;
 
-export function init(element: Partial<HTMLCanvasElement>, isEnabled?: boolean) {
+export function init(element: Partial<HTMLCanvasElement>, updater: Observable<any>, isEnabled?: boolean) {
   controls = Object.assign(new OrbitControls(camera, element as HTMLCanvasElement), {
     enabled: isEnabled,
     autoRotate: true,
@@ -26,7 +27,8 @@ export function init(element: Partial<HTMLCanvasElement>, isEnabled?: boolean) {
     },
   } as Partial<OrbitControls>);
   controls.target.set(0, 1, 0);
-  controls.update();
+  updater.subscribe(controls.update.bind(controls));
+  return controls;
 }
 
 export function toggleRotate() {

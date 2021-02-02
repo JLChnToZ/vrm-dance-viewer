@@ -1,9 +1,4 @@
-import { Object3D } from 'three/src/core/Object3D';
-import { MathUtils } from 'three/src/math/MathUtils';
-import { Quaternion } from 'three/src/math/Quaternion';
-import { Vector3 } from 'three/src/math/Vector3';
-import { Euler } from 'three/src/math/Euler';
-import { Bone } from 'three/src/objects/Bone';
+import { Object3D, MathUtils, Quaternion, Vector3, Euler, Bone } from 'three';
 import { VRM, VRMSchema } from '@pixiv/three-vrm';
 
 const BoneNames = VRMSchema.HumanoidBoneName;

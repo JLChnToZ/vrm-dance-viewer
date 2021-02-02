@@ -1,10 +1,10 @@
 import { RemoteCanvasHost } from '../utils/remote-canvas';
-import { blob2ArrayBuffer } from '../utils/helper-functions';
+import { blob2ArrayBuffer, interceptEvent } from '../utils/helper-functions';
 import { observeVisibilty } from '../utils/rx-helpers';
 import workerService from './worker-service';
 
 export const canvas = document.body.appendChild(document.createElement('canvas'));
-canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('contextmenu', interceptEvent);
 canvas.tabIndex = 0;
 
 const remoteCanvasHost = new RemoteCanvasHost(workerService, canvas);

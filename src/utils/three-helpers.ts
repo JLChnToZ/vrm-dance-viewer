@@ -1,5 +1,4 @@
-import { Object3D } from 'three/src/core/Object3D';
-import { Vector3 } from 'three/src/math/Vector3';
+import { Object3D, Vector3 } from 'three';
 
 export function* transverse(self?: Object3D | null): IterableIterator<Object3D> {
   if (!self) return;

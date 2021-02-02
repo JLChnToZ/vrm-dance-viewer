@@ -1,6 +1,4 @@
-import { Vector3 } from 'three/src/math/Vector3';
-import { Quaternion } from 'three/src/math/Quaternion';
-import { MathUtils } from 'three/src/math/MathUtils';
+import { Vector3, Quaternion, MathUtils } from 'three';
 import { VRMSchema } from '@pixiv/three-vrm';
 import { Parser, VmdFile, CharsetEncoder } from 'mmd-parser';
 import { AnimationData, Timeline, VRMOffsets } from './vmd2vrmanim.binding';

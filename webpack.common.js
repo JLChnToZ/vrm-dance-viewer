@@ -1,4 +1,4 @@
-const merge = require('webpack-merge');
+const { merge } = require('webpack-merge');
 const path = require('path');
 
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -8,19 +8,19 @@ const MiniCssExtractPluginConfig = new MiniCssExtractPlugin({
 });
 
 //https://webpack.js.org/plugins/html-webpack-plugin/
-const HtmlWebpackPlugin = require('html-webpack-plugin')
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 const HTMLWebpackPluginConfig = new HtmlWebpackPlugin({
   template: path.resolve(__dirname, 'src', 'index.html'),
   filename: 'index.html',
   inject: 'body',
   minify: {
     collapseWhitespace: true,
-    minifyCSS: true
-  }
-})
+    minifyCSS: true,
+  },
+});
 
-const WebpackCleanupPlugin = require('webpack-cleanup-plugin')
-const WebpackCleanupPluginConfig = new WebpackCleanupPlugin({});
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const CleanupPluginConfig = new CleanWebpackPlugin({});
 
 const CopyPlugin = require('copy-webpack-plugin');
 const CopyPluginConfig = new CopyPlugin({
@@ -42,39 +42,39 @@ module.exports = merge({
   },
 
   plugins: [
-    WebpackCleanupPluginConfig,
+    CleanupPluginConfig,
     HTMLWebpackPluginConfig,
     MiniCssExtractPluginConfig,
     CopyPluginConfig,
   ],
 
   module: {
-    rules: [
-      //https://www.typescriptlang.org/docs/handbook/react-&-webpack.html (ignore the react part)
-      {
-        test: /\.ts$/,
-        loader: 'awesome-typescript-loader'
-      },
-
-      //https://webpack.js.org/loaders/css-loader/
-      {
-        test: /\.css$/,
-        use: [MiniCssExtractPlugin.loader, 'css-loader'],
-      },
-
-      //https://webpack.js.org/loaders/file-loader/
-      {
-        test: /\.(gltf|mp3|svg|glb|png|jpe?g|eot|ttf|woff|woff2)$/,
-        use: [
-          {
-            loader: 'file-loader',
-            options: {
-              outputPath: 'assets',
-              name: '[sha256:hash:base64:16].[ext]'
-            }
-          }
-        ]
-      }
-    ]
-  }
-})
+    rules: [{
+      test: /\.ts$/,
+      loader: 'awesome-typescript-loader'
+    }, {
+      test: /\.css$/,
+      use: [{
+        loader: MiniCssExtractPlugin.loader,
+        options: {
+          publicPath: '',
+        },
+      }, {
+        loader: 'css-loader',
+        options: {
+          url: true,
+          import: true,
+        },
+      }],
+    }, {
+      test: /\.(gltf|mp3|svg|glb|png|jpe?g|eot|ttf|woff|woff2)$/,
+      use: [{
+        loader: 'file-loader',
+        options: {
+          outputPath: 'assets',
+          name: '[sha256:hash:base64:16].[ext]',
+        },
+      }],
+    }],
+  },
+});
