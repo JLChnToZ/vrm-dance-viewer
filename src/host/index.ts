@@ -39,7 +39,7 @@ remoteCanvasHost.eventFilters.set(PointerEvent, {
   }],
 });
 remoteCanvasHost.resizeObservable.subscribe(({ contentRect: { width, height } }) =>
-  workerService.trigger('handleResize', width, height),
+  workerService.trigger('handleResize', width * devicePixelRatio, height * devicePixelRatio),
 );
 
 export async function loadModel(file: Blob | ArrayBuffer) {
