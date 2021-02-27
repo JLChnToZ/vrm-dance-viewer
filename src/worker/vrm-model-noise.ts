@@ -110,7 +110,7 @@ class VRMModelNoiseChannel {
 
   update(deltaTime: number, reset?: boolean) {
     if (reset && this.firstRun)
-      this.bone.quaternion.multiply(tempQ.setFromEuler(tempEular.set(this.x, this.y, this.z)).inverse());
+      this.bone.quaternion.multiply(tempQ.setFromEuler(tempEular.set(this.x, this.y, this.z)).invert());
     deltaTime *= this.lerpScale;
     if (deltaTime > this.lerpScale) deltaTime = this.lerpScale;
     if (this.xmax !== this.xmin)
@@ -139,6 +139,8 @@ export default class VRMModelNoise {
   private constructor(
     public humanoid: VRMHumanoid,
   ) {
+    const pose = humanoid.getPose();
+    humanoid.resetPose();
     for (const [boneName, config] of boneNoiseConfigs) {
       const bone = humanoid.getBoneNode(boneName);
       if (!bone) continue;
@@ -150,6 +152,7 @@ export default class VRMModelNoise {
         intensity,
       ));
     }
+    humanoid.setPose(pose);
   }
 
   update(deltaTime: number, reset?: boolean) {

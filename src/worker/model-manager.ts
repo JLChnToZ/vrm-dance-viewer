@@ -19,7 +19,7 @@ const vrmLoadSubject = new Subject<VRM>();
 const vrmUnloadSubject = new Subject<VRM>();
 
 export const vrmLoadObservable = vrmLoadSubject.pipe(shareReplay(1));
-export const vrmUnloadObservable: Observable<VRM> = vrmUnloadSubject;
+export const vrmUnloadObservable = vrmUnloadSubject.asObservable();
 
 export async function load(data: ArrayBufferLike | string) {
   try {
@@ -32,6 +32,8 @@ export async function load(data: ArrayBufferLike | string) {
     }
     currentModel = model;
     scene.add(model.scene);
+    notifyMeta(model);
+    vrmLoadSubject.next(model);
     const modelUpdateOvservable = deltaTimeObservable.pipe(takeUntil(vrmUnloadSubject));
     modelUpdateOvservable.subscribe(model.update.bind(model));
     const target = model.humanoid?.getBoneNode(VRMSchema.HumanoidBoneName.Hips);
@@ -39,8 +41,6 @@ export async function load(data: ArrayBufferLike | string) {
       modelUpdateOvservable.subscribe(t =>
         controls?.target.lerp(target.getWorldPosition(v3), Math.min(1, t))
       );
-    notifyMeta(model);
-    vrmLoadSubject.next(model);
   } catch(error) {
     console.error(error);
   }

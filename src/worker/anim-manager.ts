@@ -9,6 +9,7 @@ import { VRM, VRMPose } from '@pixiv/three-vrm';
 import VRMIKHandler from './vrm-ik-handler';
 import VRMModelNoise from './vrm-model-noise';
 import { WorkerMessageService } from '../utils/message-service';
+import { registerModel, unregisterModel, updateModel } from './vrm-idle-helper';
 
 const mixers = new WeakMap<VRM, AnimationMixer>();
 const poses = new WeakMap<VRM, VRMPose>();
@@ -20,19 +21,23 @@ vrmLoadObservable.subscribe(model => {
   if (mixers.has(model)) return;
   const mixer = new AnimationMixer(model.scene);
   mixers.set(model, mixer);
+  registerModel(model);
   const ik = VRMIKHandler.get(model);
   const noise = VRMModelNoise.get(model);
   updateSubscriptions.set(mixer, deltaTimeObservable.subscribe(time => {
     const { humanoid } = model;
-    let pose = poses.get(model);
-    if (humanoid && pose)
-      humanoid.setPose(pose);
-    mixer.update(time);
-    pose = humanoid?.getPose();
-    if (pose) poses.set(model, pose);
-    else poses.delete(model);
+    if (humanoid) {
+      let pose = poses.get(model);
+      if (pose) humanoid.setPose(pose);
+      mixer.update(time);
+      pose = humanoid.getPose();
+      if (pose) poses.set(model, pose);
+      else poses.delete(model);
+    } else
+      mixer.update(time);
     noise.update(time, false);
     ik.update();
+    updateModel(model, time);
   }));
 });
 vrmUnloadObservable.subscribe(model => {
@@ -40,8 +45,7 @@ vrmUnloadObservable.subscribe(model => {
   if (!mixer) return;
   mixer.stopAllAction();
   mixers.delete(model);
-  const subscription = updateSubscriptions.get(mixer);
-  if (subscription) subscription.unsubscribe();
+  updateSubscriptions.get(mixer)?.unsubscribe();
   updateSubscriptions.delete(mixer);
 });
 
@@ -79,6 +83,7 @@ export async function load(data: ArrayBufferLike, type: string) {
       WorkerMessageService.host.trigger('warn', `Failed to load animation:\n${e}`);
   }
   if (clip) {
+    unregisterModel(model);
     clips.set(mixer, clip);
     actions.set(mixer, mixer.clipAction(clip).play());
   }

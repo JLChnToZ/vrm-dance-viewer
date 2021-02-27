@@ -1,5 +1,6 @@
 import { Object3D, MathUtils, Quaternion, Vector3, Euler, Bone } from 'three';
 import { VRM, VRMSchema } from '@pixiv/three-vrm';
+import { clampVector3ByRadian } from '../utils/three-helpers';
 
 const BoneNames = VRMSchema.HumanoidBoneName;
 const boneNameOrder: VRMSchema.HumanoidBoneName[] = [
@@ -210,7 +211,7 @@ export default class VRMIKHandler {
             quaternion,
             linkScale
           );
-          quaternion.inverse();
+          quaternion.invert();
           effectorPos.setFromMatrixPosition(effector.matrixWorld);
           effectorVec
             .subVectors(effectorPos, linkPos)
@@ -239,40 +240,3 @@ export default class VRMIKHandler {
   }
 }
 
-const PI2 = Math.PI * 2;
-
-function clampVector3ByRadian(
-  v: Vector3 | Euler,
-  min?: Vector3,
-  max?: Vector3
-) {
-  return v.set(
-    clampByRadian(v.x, min?.x, max?.x),
-    clampByRadian(v.y, min?.y, max?.y),
-    clampByRadian(v.z, min?.z, max?.z)
-  );
-}
-
-function clampByRadian(
-  v: number,
-  min = Number.NEGATIVE_INFINITY,
-  max = Number.POSITIVE_INFINITY
-) {
-  const hasMin = Number.isFinite(min);
-  const hasMax = Number.isFinite(max);
-  if (hasMin && hasMax && min === max) return min;
-  if (hasMin) min = repeat(min, PI2);
-  if (hasMax) max = repeat(max, PI2);
-  v = repeat(v, PI2);
-  if (hasMin && hasMax && min >= max) {
-    max += PI2;
-    if (v < Math.PI) v += PI2;
-  }
-  if (hasMax && v > max) v = max;
-  else if (hasMin && v < min) v = min;
-  return repeat(v, PI2);
-}
-
-function repeat(v: number, max: number) {
-  return Number.isFinite(max) ? ((v % max) + max) % max : v;
-}

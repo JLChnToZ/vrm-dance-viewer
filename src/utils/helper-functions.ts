@@ -30,6 +30,10 @@ export function lerp(min: number, max: number, v: number) {
   return v * (max - min) + min;
 }
 
+export function repeat(v: number, max: number) {
+  return Number.isFinite(max) ? ((v % max) + max) % max : v;
+}
+
 export function lazyInit<C extends new(...args: any[]) => any>(
   Class: C,
   args: ConstructorParameters<C> extends [] ?
