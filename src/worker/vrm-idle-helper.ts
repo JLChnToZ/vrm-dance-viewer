@@ -2,7 +2,6 @@ import { VRM, VRMLookAtHead, VRMSchema } from '@pixiv/three-vrm';
 import { Euler, MathUtils, Matrix4, Quaternion, Vector3 } from 'three';
 import { vrmUnloadObservable } from './model-manager';
 import { camera } from './scene/camera';
-import { lerp } from '../utils/helper-functions';
 import { clampByRadian } from '../utils/three-helpers';
 
 const BoneNames = VRMSchema.HumanoidBoneName;
@@ -104,13 +103,13 @@ function updateHead(model: VRM, deltaTime: number) {
       rotation3.setFromRotationMatrix(
         matrix.lookAt(position, position2, vector3.set(0, 1, 0)),
       ),
-      lerp(0, 1, deltaTime * LERP_SCALE),
+      MathUtils.damp(0, 1, 1, deltaTime * LERP_SCALE),
     ),
-    VRMLookAtHead.EULER_ORDER,
+    'ZYX',
   );
   euler.x = clampByRadian(euler.x, -HEAD_CLAMP_ANGLE, HEAD_CLAMP_ANGLE);
   euler.y = clampByRadian(euler.y, -HEAD_CLAMP_ANGLE, HEAD_CLAMP_ANGLE);
-  euler.z = clampByRadian(euler.z, -HEAD_CLAMP_ANGLE / 2, HEAD_CLAMP_ANGLE / 2);
+  euler.z = clampByRadian(euler.z, -HEAD_CLAMP_ANGLE, HEAD_CLAMP_ANGLE);
   bone.applyQuaternion(
     rotation2.setFromEuler(euler).multiply(
       rotation3
@@ -126,16 +125,16 @@ function updateEyeBlink(model: VRM, deltaTime: number) {
   if (!model.blendShapeProxy) return;
   let v = blinkDelays.get(model);
   if (v == null || v < -BLINK_DURATION)
-    v = lerp(MIN_BLINK_DELAY, MAX_BLINK_DEALY, Math.random());
+    v = MathUtils.lerp(MIN_BLINK_DELAY, MAX_BLINK_DEALY, Math.random());
   else
     v -= deltaTime;
   blinkDelays.set(model, v);
   if (v <= 0) {
     v = -v;
     if (v < BLINK_DURATION / 2)
-      v = lerp(0, 1, v / BLINK_DURATION * 2);
+      v = MathUtils.lerp(0, 1, v / BLINK_DURATION * 2);
     else
-      v = lerp(0, 1, 2 - v / BLINK_DURATION * 2);
+      v = MathUtils.lerp(0, 1, 2 - v / BLINK_DURATION * 2);
     model.blendShapeProxy.setValue(VRMSchema.BlendShapePresetName.Blink, v);
   } else {
     model.blendShapeProxy.setValue(VRMSchema.BlendShapePresetName.Blink, 0);
@@ -149,7 +148,7 @@ function updateIdlePose(model: VRM, deltaTime: number) {
     if (node) node.setRotationFromQuaternion(
       rotation2
       .setFromRotationMatrix(node.matrix)
-      .slerp(rotation, lerp(0, 1, deltaTime * LERP_SCALE)),
+      .slerp(rotation, MathUtils.lerp(0, 1, deltaTime * LERP_SCALE)),
     );
   }
 }

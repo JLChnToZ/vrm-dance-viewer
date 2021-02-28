@@ -1,5 +1,4 @@
-import { Euler, Object3D, Vector3 } from 'three';
-import { repeat } from './helper-functions';
+import { Euler, MathUtils, Object3D, Vector3 } from 'three';
 
 export function* transverse(self?: Object3D | null): IterableIterator<Object3D> {
   if (!self) return;
@@ -57,14 +56,14 @@ export function clampByRadian(
   const hasMin = Number.isFinite(min);
   const hasMax = Number.isFinite(max);
   if (hasMin && hasMax && min === max) return min;
-  if (hasMin) min = repeat(min, PI2);
-  if (hasMax) max = repeat(max, PI2);
-  v = repeat(v, PI2);
+  if (hasMin) min = MathUtils.euclideanModulo(min, PI2);
+  if (hasMax) max = MathUtils.euclideanModulo(max, PI2);
+  v = MathUtils.euclideanModulo(v, PI2);
   if (hasMin && hasMax && min >= max) {
     max += PI2;
     if (v < Math.PI) v += PI2;
   }
   if (hasMax && v > max) v = max;
   else if (hasMin && v < min) v = min;
-  return repeat(v, PI2);
+  return MathUtils.euclideanModulo(v, PI2);
 }

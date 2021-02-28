@@ -2,37 +2,18 @@ export type Collection<T> = ArrayLike<T> | Iterable<T>;
 
 export type Callback = (...args: any[]) => any;
 
-export const emptyArray = Object.freeze({
-  length: 0,
-  [Symbol.toStringTag]: 'EmptyArray',
-  next() { return { done: true } as IteratorReturnResult<any>; },
-  [Symbol.iterator]() { return this; },
-}) as ArrayLike<any> & IterableIterator<any>;
+export const emptyArray = Object.freeze<any>([]);
 
 export interface Resolver<T> {
   resolve(value?: T | PromiseLike<T>): void;
   reject(reason?: any): void;
 }
 
-export function isTruely<T>(x: T): x is Exclude<T, 0 | null | undefined | ""> {
+export function isTruely<T>(x: T): x is Exclude<T, false | "" | 0 | null | undefined> {
   return !!x;
 }
 
 export function noop() {}
-
-export function random(min: number, max: number) {
-  return lerp(min, max, Math.random());
-}
-
-export function lerp(min: number, max: number, v: number) {
-  if (v >= 1) return max;
-  if (v <= 0 || Number.isNaN(v)) return min;
-  return v * (max - min) + min;
-}
-
-export function repeat(v: number, max: number) {
-  return Number.isFinite(max) ? ((v % max) + max) % max : v;
-}
 
 export function lazyInit<C extends new(...args: any[]) => any>(
   Class: C,
@@ -123,6 +104,12 @@ export function isArrayLike(src: any): src is ArrayLike<any> {
 
 export function isIterable(src: any): src is Iterable<any> {
   return src != null && typeof src[Symbol.iterator] === 'function';
+}
+
+export function tryIterate<T>(src?: Collection<T> | null): Iterable<T> {
+  return src == null ? emptyArray :
+    isIterable(src) ? src :
+    Array.prototype.values.call(src);
 }
 
 export function forEach<S extends Iterable<any> | ArrayLike<any>>(

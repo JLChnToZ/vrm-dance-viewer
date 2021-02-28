@@ -6,8 +6,8 @@ import {
   forEach,
   getOrCreate,
   isArrayLike,
-  isIterable,
   Resolver,
+  tryIterate,
 } from './helper-functions';
 import { deferTrigger } from './message-queue';
 
@@ -79,9 +79,7 @@ export abstract class MessageServiceBase {
       if (isArrayLike(callback) && !callback.length)
         continue;
       if (!oCallbacks) {
-        this._callbacks.set(message, new Set(
-          isIterable(callback) ? callback : Array.from(callback),
-        ));
+        this._callbacks.set(message, new Set(tryIterate(callback)));
         continue;
       }
       forEach(callback, oCallbacks.add, oCallbacks);

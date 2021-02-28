@@ -1,5 +1,4 @@
 import { VRM, VRMHumanoid, VRMSchema } from '@pixiv/three-vrm';
-import { lerp, random } from '../utils/helper-functions';
 import { Euler, MathUtils, Object3D, Quaternion } from 'three';
 
 interface NoiseConfig {
@@ -13,8 +12,8 @@ interface NoiseConfig {
 
 const tempEular = new Euler();
 const tempQ = new Quaternion();
-const range = MathUtils.DEG2RAD * 25;
-const intensity = 0.1;
+const range = MathUtils.DEG2RAD * 2.5;
+const intensity = 1;
 
 const defaultNoise: NoiseConfig = {
   xmin: -range, xmax: range,
@@ -114,11 +113,11 @@ class VRMModelNoiseChannel {
     deltaTime *= this.lerpScale;
     if (deltaTime > this.lerpScale) deltaTime = this.lerpScale;
     if (this.xmax !== this.xmin)
-      this.x = lerp(this.x, random(this.xmin, this.xmax), deltaTime);
+      this.x = MathUtils.lerp(this.x, MathUtils.randFloat(this.xmin, this.xmax), deltaTime);
     if (this.ymax !== this.ymin)
-      this.y = lerp(this.y, random(this.ymin, this.ymax), deltaTime);
+      this.y = MathUtils.lerp(this.y, MathUtils.randFloat(this.ymin, this.ymax), deltaTime);
     if (this.zmax !== this.zmin)
-      this.z = lerp(this.z, random(this.zmin, this.zmax), deltaTime);
+      this.z = MathUtils.lerp(this.z, MathUtils.randFloat(this.zmin, this.zmax), deltaTime);
     this.bone.quaternion.multiply(tempQ.setFromEuler(tempEular.set(this.x, this.y, this.z)));
     this.firstRun = false;
   }
