@@ -126,7 +126,7 @@ function updateHead(model: VRM, deltaTime: number) {
           clampByRadian(euler.z, -HEAD_CLAMP_ANGLE, HEAD_CLAMP_ANGLE),
         ),
       ),
-      MathUtils.damp(0, 1, HEAD_ROTATE_DAMP, deltaTime * LERP_SCALE),
+      Math.min(MathUtils.damp(0, 1, HEAD_ROTATE_DAMP, deltaTime * LERP_SCALE), 1),
     ).multiply(
       rotation3.setFromRotationMatrix(bone.matrix),
     ).multiply(
@@ -164,7 +164,7 @@ function updateIdlePose(model: VRM, deltaTime: number) {
     if (node) node.setRotationFromQuaternion(
       rotation3
       .setFromRotationMatrix(node.matrix)
-      .slerp(finalRotation, MathUtils.lerp(0, 1, deltaTime * LERP_SCALE)),
+      .slerp(finalRotation, Math.min(deltaTime * LERP_SCALE, 1)),
     );
   }
 }

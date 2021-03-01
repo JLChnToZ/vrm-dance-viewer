@@ -1,6 +1,6 @@
-import { VRM, VRMSchema } from '@pixiv/three-vrm';
+import { VRM, VRMSchema, VRMUtils } from '@pixiv/three-vrm';
 import { extractThumbnailBlob } from '../utils/thumbnail-extractor';
-import { Observable, Subject } from 'rxjs';
+import { Subject } from 'rxjs';
 import { blob2ArrayBuffer } from '../utils/helper-functions';
 import { Vector3 } from 'three';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
@@ -24,6 +24,7 @@ export const vrmUnloadObservable = vrmUnloadSubject.asObservable();
 export async function load(data: ArrayBufferLike | string) {
   try {
     const model = await loadVRM(data);
+    VRMUtils.removeUnnecessaryJoints(model.scene);
     if (currentModel) {
       vrmUnloadSubject.next(currentModel);
       scene.remove(currentModel.scene);
