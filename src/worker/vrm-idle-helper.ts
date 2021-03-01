@@ -9,6 +9,7 @@ const BoneNames = VRMSchema.HumanoidBoneName;
 const LERP_SCALE = 6;
 const HEAD_ROTATE_DAMP = 1;
 const HEAD_CLAMP_ANGLE = 60 * MathUtils.DEG2RAD;
+const LOOK_CAMERA_THRESHOLD = 0;
 const ARM_IDLE_ANGLE = 75 * MathUtils.DEG2RAD;
 const FINGER_IDLE_ANGLE = 15 * MathUtils.DEG2RAD;
 const THUMB_IDLE_ANGLE = 30 * MathUtils.DEG2RAD;
@@ -145,7 +146,7 @@ function updateEyeBlink(model: VRM, deltaTime: number) {
   blinkDelays.set(model, v);
   model.blendShapeProxy.setValue(
     VRMSchema.BlendShapePresetName.Blink,
-    v > 0 ? 0 : MathUtils.pingpong(-v, BLINK_DURATION / 2) * 2 / BLINK_DURATION,
+    v > LOOK_CAMERA_THRESHOLD ? 0 : MathUtils.pingpong(-v, BLINK_DURATION / 2) * 2 / BLINK_DURATION,
   );
 }
 

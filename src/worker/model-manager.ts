@@ -2,10 +2,10 @@ import { VRM, VRMSchema, VRMUtils } from '@pixiv/three-vrm';
 import { extractThumbnailBlob } from '../utils/thumbnail-extractor';
 import { Subject } from 'rxjs';
 import { blob2ArrayBuffer } from '../utils/helper-functions';
-import { Vector3 } from 'three';
+import { Group, Vector3 } from 'three';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { deltaTimeObservable } from './scene';
-import { controls } from './scene/controls';
+import { controls, panToTarget } from './scene/controls';
 import { scene } from './scene/scene';
 import { shareReplay, take, takeUntil } from 'rxjs/operators';
 import { WorkerMessageService } from '../utils/message-service';
@@ -24,7 +24,6 @@ export const vrmUnloadObservable = vrmUnloadSubject.asObservable();
 export async function load(data: ArrayBufferLike | string) {
   try {
     const model = await loadVRM(data);
-    VRMUtils.removeUnnecessaryJoints(model.scene);
     if (currentModel) {
       vrmUnloadSubject.next(currentModel);
       scene.remove(currentModel.scene);
@@ -38,20 +37,19 @@ export async function load(data: ArrayBufferLike | string) {
     const modelUpdateOvservable = deltaTimeObservable.pipe(takeUntil(vrmUnloadSubject));
     modelUpdateOvservable.subscribe(model.update.bind(model));
     const target = model.humanoid?.getBoneNode(VRMSchema.HumanoidBoneName.Hips);
-    if (target)
-      modelUpdateOvservable.subscribe(t =>
-        controls?.target.lerp(target.getWorldPosition(v3), Math.min(1, t))
-      );
+    modelUpdateOvservable.subscribe(t => panToTarget(t, model.scene, target));
   } catch(error) {
     console.error(error);
   }
   await deltaTimeObservable.pipe(take(2)).toPromise();
 }
 
-export function loadVRM(data: ArrayBufferLike | string) {
-  return new Promise<GLTF>((resolve, reject) =>
+export async function loadVRM(data: ArrayBufferLike | string) {
+  const gltf = await new Promise<GLTF>((resolve, reject) =>
     gltfLoader.parse(data, '', resolve, ({ error }) => reject(error)),
-  ).then(VRM.from);
+  );
+  VRMUtils.removeUnnecessaryJoints(gltf.scene);
+  return VRM.from(gltf);
 }
 
 async function notifyMeta(model: VRM) {
