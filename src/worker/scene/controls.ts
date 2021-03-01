@@ -14,20 +14,25 @@ export function init(element: Partial<HTMLCanvasElement>, updater: Observable<an
     autoRotate: true,
     autoRotateSpeed: 0.5,
     enableDamping: true,
+    enableKeys: true,
+    screenSpacePanning: true,
+    zoomSpeed: 0.5,
     maxDistance: 5,
     minDistance: 0.5,
+    keyPanSpeed: 30,
     maxPolarAngle: 150 * MathUtils.DEG2RAD,
     minPolarAngle: 30 * MathUtils.DEG2RAD,
     mouseButtons: {
       LEFT: MOUSE.ROTATE,
-      MIDDLE: MOUSE.DOLLY,
-      RIGHT: MOUSE.PAN,
+      MIDDLE: MOUSE.PAN,
+      RIGHT: MOUSE.DOLLY,
     },
     touches: {
       ONE: TOUCH.ROTATE,
       TWO: TOUCH.DOLLY_PAN,
     },
   } as Partial<OrbitControls>);
+  controls.listenToKeyEvents(element as HTMLCanvasElement);
   controls.target.set(0, 1, 0);
   updater.subscribe(update);
   return controls;
