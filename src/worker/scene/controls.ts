@@ -5,6 +5,7 @@ import { camera } from './camera';
 import { WorkerMessageService } from '../../utils/message-service';
 
 export let controls: OrbitControls | undefined;
+export let targetPosition = new Vector3(0, 1, 0);
 const vector3 = new Vector3();
 const box = new Box3();
 
@@ -33,7 +34,8 @@ export function init(element: Partial<HTMLCanvasElement>, updater: Observable<an
     },
   } as Partial<OrbitControls>);
   controls.listenToKeyEvents(element as HTMLCanvasElement);
-  controls.target.set(0, 1, 0);
+  controls.target.copy(targetPosition);
+  targetPosition = controls.target;
   updater.subscribe(update);
   return controls;
 }

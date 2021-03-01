@@ -1,12 +1,14 @@
 import './main.css';
 import './i18n';
+import { ajax } from 'rxjs/ajax';
 import { canvas, loadAnimation, loadModel, toggleAutoRotate, toggleLights } from './host';
-import { showMoreInfo } from './host/meta-display';
+import { setAutoShown, showMoreInfo } from './host/meta-display';
 import registerStats from './host/status';
 import { registerDropZone } from './utils/drag-drop';
 import { showSnack } from './utils/tocas-helpers';
 import { observeMediaQuery } from './utils/rx-helpers';
-import { interceptEvent } from './utils/helper-functions';
+import { interceptEvent, isInFrame } from './utils/helper-functions';
+import workerService from './host/worker-service';
 
 const loadingPromises: Promise<any>[] = [];
 let isLoading = false;
@@ -64,7 +66,79 @@ function errorToSnackBar(error?: any) {
   if (message) showSnack(message);
 }
 
-registerDropZone(canvas, data => onFileSelected(data.files));
+const { searchParams } = new URL(location.toString());
+
+if (isInFrame())
+  searchParams.set('nostats', '');
+else
+  registerDropZone(canvas, data => onFileSelected(data.files));
+
+if (searchParams.get('nostats') != null)
+  for (const element of document.querySelectorAll('.credits, .stats'))
+    element.remove();
+else
+  registerStats(
+    document.getElementById('fps')!,
+    document.getElementById('draw-call')!,
+    document.getElementById('face-count')!,
+  );
+
+if (searchParams.get('notoolbar') != null)
+  document.querySelector('.menu')?.classList.add('hidden');
+
+if (searchParams.get('norotate') != null)
+  toggleAutoRotate();
+
+if (searchParams.get('dark') != null)
+  toggleLights();
+
+if (searchParams.get('noinfo') != null)
+  setAutoShown(false);
+
+const vrmUrl = searchParams.get('vrm');
+if (vrmUrl)
+  loadingPromises.push((async () => {
+    const { response } = await ajax({
+      url: vrmUrl,
+      responseType: 'blob',
+    }).toPromise();
+    return loadModel(response);
+  })());
+
+const animUrl = searchParams.get('anim');
+if (animUrl)
+  loadingPromises.push((async () => {
+    const { response } = await ajax({
+      url: animUrl,
+      responseType: 'blob',
+    }).toPromise();
+    let animType = searchParams.get('animtype');
+    if (!animType) {
+      if (animUrl.endsWith('.vmd'))
+        animType = 'vmd';
+      else if (animUrl.endsWith('.bvh'))
+        animType = 'bvh';
+      else
+        animType = 'vmd';
+    }
+    return loadAnimation(response, animType);
+  })());
+
+const camX = searchParams.get('x');
+if (camX) workerService.trigger('setCameraX', Number(camX));
+const camY = searchParams.get('y');
+if (camY) workerService.trigger('setCameraY', Number(camY));
+const camZ = searchParams.get('z');
+if (camZ) workerService.trigger('setCameraZ', Number(camZ));
+const targetX = searchParams.get('tx');
+if (targetX) workerService.trigger('setTargetX', Number(targetX));
+const targetY = searchParams.get('ty');
+if (targetY) workerService.trigger('setTargetY', Number(targetY));
+const targetZ = searchParams.get('tz');
+if (targetZ) workerService.trigger('setTargetZ', Number(targetZ));
+
+if (searchParams.get('nocontrols') != null)
+  workerService.trigger('enableControls', false);
 
 document.querySelector('#lights')?.addEventListener('click', toggleLights);
 document.querySelector('#rotate')?.addEventListener('click', toggleAutoRotate);
@@ -78,20 +152,16 @@ fileSelect?.addEventListener('change', e => {
 });
 document.querySelector('#info')?.addEventListener('click', showMoreInfo);
 
-registerStats(
-  document.getElementById('fps')!,
-  document.getElementById('draw-call')!,
-  document.getElementById('face-count')!,
-);
-
 observeMediaQuery('(prefers-color-scheme:dark)').subscribe(matches =>
   document.querySelectorAll('.ts:not(.dimmer)').forEach(element =>
     element.classList[matches ? 'add' : 'remove']('inverted'),
   ),
 );
 
-window.addEventListener('dragover', e => {
+self.addEventListener('dragover', e => {
   interceptEvent(e);
   if (e.dataTransfer) e.dataTransfer.dropEffect = 'none';
 });
-window.addEventListener('drop', interceptEvent);
+self.addEventListener('drop', interceptEvent);
+
+if (loadingPromises.length) triggerLoading();

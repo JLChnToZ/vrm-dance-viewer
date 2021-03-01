@@ -4,11 +4,12 @@ import h from 'hyperscript';
 import { VRMMeta, VRMSchema } from '@pixiv/three-vrm';
 import workerService from './worker-service';
 import { showModel as triggerShowModal } from '../utils/tocas-helpers';
-import { arrayBufferToObjectUrl, emptyArray } from '../utils/helper-functions';
+import { arrayBufferToObjectUrl } from '../utils/helper-functions';
 
 const copyrightRegex = /^\s*(©|\([Cc]\)|\[[Cc]\])/;
 
 let hasMeta = false;
+let autoShown = true;
 
 interface LicenseMeta {
   badgeUrl?: string;
@@ -114,6 +115,10 @@ function setIcon(icon?: Blob | BlobPart | string | null) {
 
 export function showMoreInfo() {
   if (hasMeta) triggerShowModal(document.querySelector<HTMLDialogElement>('#dialogmodal')!);
+}
+
+export function setAutoShown(newState: boolean) {
+  autoShown = newState;
 }
 
 function formatCopyright(author?: string) {
@@ -258,7 +263,7 @@ function prepareModel(meta: VRMMeta) {
     ),
   );
   hasMeta = true;
-  triggerShowModal(modal);
+  if (autoShown) triggerShowModal(modal);
 }
 
 function getMetaUsageIcon(usage: VRMSchema.MetaUssageName | boolean) {

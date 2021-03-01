@@ -5,7 +5,7 @@ import { camera } from './camera';
 import { scene } from './scene';
 import { init as initLights } from './lights';
 import { init as initRenderer, renderer } from './renderer';
-import { init as initControls, controls } from './controls';
+import { init as initControls, controls, targetPosition } from './controls';
 import { setCenter } from './floor';
 import { WebGLRenderer } from 'three';
 import { WorkerMessageService } from '../../utils/message-service';
@@ -14,6 +14,7 @@ import { LoopManager } from '../../utils/loop-manager';
 export const deltaTimeObservable = new Subject<number>();
 let frameCount = 0;
 let lastStatsUpdate = 0;
+let controlsEnabled = true;
 
 const loopManager = new LoopManager(deltaTime => {
   deltaTimeObservable.next(deltaTime / 1000);
@@ -44,7 +45,7 @@ export function enable(enable?: boolean) {
   if (enable != null) {
     loopManager.enabled = enable;
     if (controls)
-      controls.enabled = enable;
+      controls.enabled = enable && controlsEnabled;
   }
   return loopManager.enabled;
 }
@@ -60,4 +61,39 @@ function notifyRendererStats({ info }: WebGLRenderer) {
   lastStatsUpdate = timestamp;
 }
 
-WorkerMessageService.host.on({ handleResize, enable });
+function setCameraX(value: number) {
+  camera.position.setX(value);
+}
+
+function setCameraY(value: number) {
+  camera.position.setY(value);
+  controls?.target.setY(value);
+}
+
+function setCameraZ(value: number) {
+  camera.position.setZ(value);
+}
+
+function setTargetX(value: number) {
+  targetPosition.setX(value);
+}
+
+function setTargetY(value: number) {
+  targetPosition.setY(value);
+}
+
+function setTargetZ(value: number) {
+  targetPosition.setZ(value);
+}
+
+function enableControls(value: boolean) {
+  controlsEnabled = value;
+  if (controls) controls.enabled = loopManager.enabled && value;
+}
+
+WorkerMessageService.host.on({
+  handleResize, enable,
+  setCameraX, setCameraY, setCameraZ,
+  setTargetX, setTargetY, setTargetZ,
+  enableControls,
+});

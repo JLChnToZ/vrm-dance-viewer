@@ -207,3 +207,11 @@ export function sanitize(raw: any, filter?: any) {
   }
   return sanitized;
 }
+
+export function isInFrame() {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+}
