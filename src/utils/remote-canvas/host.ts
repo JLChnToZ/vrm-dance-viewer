@@ -1,5 +1,5 @@
 import { MessageType } from '.';
-import { sanitize } from '../helper-functions';
+import { interceptEvent, sanitize } from '../helper-functions';
 import { WorkerMessageService } from '../message-service';
 import { observeResize } from '../rx-helpers';
 
@@ -52,8 +52,7 @@ export class RemoteCanvasHost {
   }
 
   private _eventListener(e: Event) {
-    if (!e.defaultPrevented) e.preventDefault();
-    e.stopPropagation();
+    this.interceptEvent(e);
     this.messageService.trigger(MessageType.trigger, Object.assign(
       sanitize(e, this.eventFilters.get(e.constructor)),
       { target: this.token },
@@ -67,5 +66,9 @@ export class RemoteCanvasHost {
       case 'blur': this.canvas.blur(); break;
       case 'click': this.canvas.click(); break;
     }
+  }
+
+  interceptEvent(e: Event) {
+    return interceptEvent(e);
   }
 }

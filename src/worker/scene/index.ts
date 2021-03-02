@@ -5,7 +5,7 @@ import { camera } from './camera';
 import { scene } from './scene';
 import { init as initLights } from './lights';
 import { init as initRenderer, renderer } from './renderer';
-import { init as initControls, controls, targetPosition } from './controls';
+import { init as initControls, controls, targetPosition, enableOrbit, enableXR } from './controls';
 import { setCenter } from './floor';
 import { WebGLRenderer } from 'three';
 import { WorkerMessageService } from '../../utils/message-service';
@@ -44,8 +44,7 @@ export function handleResize(width: number, height: number) {
 export function enable(enable?: boolean) {
   if (enable != null) {
     loopManager.enabled = enable;
-    if (controls)
-      controls.enabled = enable && controlsEnabled;
+    enableOrbit(enable && controlsEnabled);
   }
   return loopManager.enabled;
 }
@@ -88,12 +87,12 @@ function setTargetZ(value: number) {
 
 function enableControls(value: boolean) {
   controlsEnabled = value;
-  if (controls) controls.enabled = loopManager.enabled && value;
+  enableOrbit(loopManager.enabled && value);
 }
 
 WorkerMessageService.host.on({
   handleResize, enable,
   setCameraX, setCameraY, setCameraZ,
   setTargetX, setTargetY, setTargetZ,
-  enableControls,
+  enableControls, enableXR,
 });

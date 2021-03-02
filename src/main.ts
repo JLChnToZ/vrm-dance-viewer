@@ -66,14 +66,14 @@ function errorToSnackBar(error?: any) {
   if (message) showSnack(message);
 }
 
-const { searchParams } = new URL(location.toString());
+const searchParams = new URLSearchParams(location.search);
 
 if (isInFrame())
   searchParams.set('nostats', '');
 else
   registerDropZone(canvas, data => onFileSelected(data.files));
 
-if (searchParams.get('nostats') != null)
+if (searchParams.has('nostats'))
   for (const element of document.querySelectorAll('.credits, .stats'))
     element.remove();
 else
@@ -83,16 +83,16 @@ else
     document.getElementById('face-count')!,
   );
 
-if (searchParams.get('notoolbar') != null)
+if (searchParams.has('notoolbar'))
   document.querySelector('.menu')?.classList.add('hidden');
 
-if (searchParams.get('norotate') != null)
+if (searchParams.has('norotate'))
   toggleAutoRotate();
 
-if (searchParams.get('dark') != null)
+if (searchParams.has('dark'))
   toggleLights();
 
-if (searchParams.get('noinfo') != null)
+if (searchParams.has('noinfo'))
   setAutoShown(false);
 
 const vrmUrl = searchParams.get('vrm');
@@ -137,7 +137,7 @@ if (targetY) workerService.trigger('setTargetY', Number(targetY));
 const targetZ = searchParams.get('tz');
 if (targetZ) workerService.trigger('setTargetZ', Number(targetZ));
 
-if (searchParams.get('nocontrols') != null)
+if (searchParams.has('nocontrols'))
   workerService.trigger('enableControls', false);
 
 document.querySelector('#lights')?.addEventListener('click', toggleLights);

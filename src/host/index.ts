@@ -1,9 +1,11 @@
+import h from 'hyperscript';
 import { RemoteCanvasHost } from '../utils/remote-canvas';
 import { blob2ArrayBuffer, interceptEvent } from '../utils/helper-functions';
 import { observeVisibilty } from '../utils/rx-helpers';
 import workerService from './worker-service';
+import { isSupported as isVRSupported } from '../utils/xr-detect';
 
-export const canvas = document.body.appendChild(document.createElement('canvas'));
+export const canvas = document.body.appendChild(h('canvas', { tabIndex: 0 }));
 canvas.addEventListener('contextmenu', interceptEvent);
 canvas.tabIndex = 0;
 
@@ -42,6 +44,17 @@ remoteCanvasHost.resizeObservable.subscribe(({ contentRect: { width, height } })
   workerService.trigger('handleResize', width * devicePixelRatio, height * devicePixelRatio),
 );
 
+remoteCanvasHost.interceptEvent = function(e: Event) {
+  console.log(e.type);
+  switch (e.type) {
+    case 'pointerdown': case 'pointerup':
+    case 'touchstart': case 'touchend':
+      break;
+    default:
+      interceptEvent(e);
+  }
+};
+
 export async function loadModel(file: Blob | ArrayBuffer) {
   if (file instanceof Blob)
     file = await blob2ArrayBuffer(file);
@@ -65,5 +78,15 @@ export function toggleAutoRotate() {
 observeVisibilty.subscribe(
   state => workerService.trigger('enable', state === 'visible'),
 );
+
+(async () => {
+  if (await isVRSupported)
+    document.querySelector('.menu.controls')?.appendChild(
+      h('a.item', {
+        onclick: () => workerService.trigger('enableXR'),
+        'data-tooltip': 'VR Mode',
+      }, h('i.cube.icon')),
+    );
+})();
 
 workerService.on({ warn: alert.bind(window) });

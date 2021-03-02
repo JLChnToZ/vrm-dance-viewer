@@ -1,17 +1,26 @@
 import { Box3, MathUtils, MOUSE, Object3D, TOUCH, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { Observable } from 'rxjs';
-import { camera } from './camera';
-import { WorkerMessageService } from '../../utils/message-service';
+import { camera } from '../camera';
+import { WorkerMessageService } from '../../../utils/message-service';
+import { isXR } from './common';
 
 export let controls: OrbitControls | undefined;
 export let targetPosition = new Vector3(0, 1, 0);
 const vector3 = new Vector3();
 const box = new Box3();
+let isOrbitEnabled = true;
 
-export function init(element: Partial<HTMLCanvasElement>, updater: Observable<any>, isEnabled?: boolean) {
+export function enableOrbit(enable: boolean) {
+  isOrbitEnabled = enable;
+  if (controls && !isXR())
+    controls.enabled = isOrbitEnabled;
+}
+
+export function init(element: Partial<HTMLCanvasElement>, updater: Observable<any>, enabled?: boolean) {
+  if (enabled === false) isOrbitEnabled = false;
   controls = Object.assign(new OrbitControls(camera, element as HTMLCanvasElement), {
-    enabled: isEnabled,
+    enabled: enabled && !isXR(),
     autoRotate: true,
     autoRotateSpeed: 0.5,
     enableDamping: true,
@@ -37,6 +46,10 @@ export function init(element: Partial<HTMLCanvasElement>, updater: Observable<an
   controls.target.copy(targetPosition);
   targetPosition = controls.target;
   updater.subscribe(update);
+  isXR.on(enabled => {
+    if (!controls) return;
+    controls.enabled = enabled && isOrbitEnabled
+  });
   return controls;
 }
 
