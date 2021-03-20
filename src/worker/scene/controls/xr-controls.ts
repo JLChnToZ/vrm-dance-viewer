@@ -1,15 +1,10 @@
-import { Navigator as XRNavigator, XRSession } from 'three';
+import { WorkerMessageService } from '../../../utils/message-service';
+import { isSupported } from '../../../utils/xr-detect';
+import { XRSession } from 'three';
 import { renderer } from '../renderer';
 import { isXR } from './common';
 
-declare var navigator: Navigator & XRNavigator;
-
 let promise: Promise<boolean> | undefined;
-
-export const supported = (async ({ xr }) => {
-  if (!xr) return false;
-  return xr.isSessionSupported('immersive-vr');
-})(navigator);
 
 function xrSessionEnd() {
   if (!renderer) return;
@@ -25,8 +20,8 @@ export function enableXR(enable?: boolean) {
 
 async function execEnableXR(enable?: boolean) {
   console.log(navigator);
-  if (!renderer || !navigator.xr || !await supported) {
-    console.log('Boo, not supported :(');
+  if (!renderer || !navigator.xr || !await isSupported) {
+    WorkerMessageService.host.trigger('warn', 'Failed to initialize webXR.');
     return false;
   }
   const { xr } = navigator;
@@ -34,7 +29,6 @@ async function execEnableXR(enable?: boolean) {
   if (enable == null)
     enable = !xrManager.enabled;
   if (enable && !xrManager.enabled) {
-    console.log('Trying to enable VR');
     let session: XRSession | undefined;
     try {
       session = await xr.requestSession('immersive-vr', {

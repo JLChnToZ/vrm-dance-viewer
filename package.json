@@ -27,7 +27,6 @@
     "@types/resize-observer-browser": "latest",
     "@types/three": "latest",
     "@types/webpack-env": "latest",
-    "@types/webxr": "^0.2.1",
     "dseg": "latest",
     "hyperscript": "latest",
     "i18next": "latest",

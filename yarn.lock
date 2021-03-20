@@ -219,11 +219,6 @@
     "@types/webpack-sources" "*"
     source-map "^0.6.0"
 
-"@types/webxr@^0.2.1":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@types/webxr/-/webxr-0.2.1.tgz#58eab531ac17d761894cdea63c7d86b3f31cc0d6"
-  integrity sha512-1WLx0tQUXJKqdIeTPLZPMOzeI+ZdhCdp/iqB8Ke8bWG+tfvSuyWow+MM6Rl/7NGabW1rcwJyO3y3gjnbo2AVvA==
-
 "@webassemblyjs/ast@1.11.0":
   version "1.11.0"
   resolved "https://registry.yarnpkg.com/@webassemblyjs/ast/-/ast-1.11.0.tgz#a5aa679efdc9e51707a4207139da57920555961f"

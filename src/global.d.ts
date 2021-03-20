@@ -1,4 +1,14 @@
-declare module "mmd-parser" {
+declare module '__global' {
+  import { Navigator as NavigatorWithXR, Window as WindowWithXR } from 'three';
+  export {};
+  global {
+    // Imports WebXR interface
+    interface Window extends WindowWithXR {}
+    interface Navigator extends NavigatorWithXR {}
+  }
+}
+
+declare module 'mmd-parser' {
   export const CharsetEncoder: any;
   export class Parser {
     parsePmd(buffer: ArrayBufferLike, leftToRight?: boolean): any;

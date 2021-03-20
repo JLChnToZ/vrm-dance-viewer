@@ -75,6 +75,10 @@ export function toggleAutoRotate() {
   return void workerService.trigger('toggleRotate');
 }
 
+export function toggleBloom() {
+  return void workerService.trigger('toggleBloom');
+}
+
 observeVisibilty.subscribe(
   state => workerService.trigger('enable', state === 'visible'),
 );

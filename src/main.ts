@@ -1,7 +1,7 @@
 import './main.css';
 import './i18n';
 import { ajax } from 'rxjs/ajax';
-import { canvas, loadAnimation, loadModel, toggleAutoRotate, toggleLights } from './host';
+import { canvas, loadAnimation, loadModel, toggleAutoRotate, toggleBloom, toggleLights } from './host';
 import { setAutoShown, showMoreInfo } from './host/meta-display';
 import registerStats from './host/status';
 import { registerDropZone } from './utils/drag-drop';
@@ -95,6 +95,9 @@ if (searchParams.has('dark'))
 if (searchParams.has('noinfo'))
   setAutoShown(false);
 
+if (searchParams.has('nobloom'))
+  toggleBloom();
+
 const vrmUrl = searchParams.get('vrm');
 if (vrmUrl)
   loadingPromises.push((async () => {
@@ -141,6 +144,7 @@ if (searchParams.has('nocontrols'))
   workerService.trigger('enableControls', false);
 
 document.querySelector('#lights')?.addEventListener('click', toggleLights);
+document.querySelector('#bloom')?.addEventListener('click', toggleBloom);
 document.querySelector('#rotate')?.addEventListener('click', toggleAutoRotate);
 const fileSelect = document.querySelector<HTMLInputElement>('#selectfile');
 document.querySelector('#open')?.addEventListener('click', () => fileSelect?.click());

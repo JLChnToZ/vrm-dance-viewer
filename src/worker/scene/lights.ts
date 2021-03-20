@@ -8,7 +8,7 @@ scene.background = new Color(bgColor);
 scene.fog = new Fog(bgColor, 3, 10);
 
 let targetIntensity = 1;
-let currentIntensity = 0;
+export let currentIntensity = 0;
 const ambiantLight = new HemisphereLight(0xffffff, 0x444444);
 ambiantLight.position.set(0, 20, 0);
 scene.add(ambiantLight);

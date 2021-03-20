@@ -2,9 +2,9 @@ import { Subject } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { initWorkerContext, remoteCanvasObservable } from '../../utils/remote-canvas';
 import { camera } from './camera';
-import { scene } from './scene';
 import { init as initLights } from './lights';
-import { init as initRenderer, renderer } from './renderer';
+import { init as initRenderer } from './renderer';
+import { updateSize, init as initPostProcessing, render } from './post-processing';
 import { init as initControls, controls, targetPosition, enableOrbit, enableXR } from './controls';
 import { setCenter } from './floor';
 import { WebGLRenderer } from 'three';
@@ -17,8 +17,9 @@ let lastStatsUpdate = 0;
 let controlsEnabled = true;
 
 const loopManager = new LoopManager(deltaTime => {
-  deltaTimeObservable.next(deltaTime / 1000);
-  renderer?.render(scene, camera);
+  deltaTime /= 1000;
+  deltaTimeObservable.next(deltaTime);
+  render(deltaTime);
   frameCount++;
 }, true);
 
@@ -29,6 +30,7 @@ remoteCanvasObservable.pipe(take(1)).subscribe(canvas => {
     (self as any).document = {};
   const renderer = initRenderer(canvas.undelyOffscreenCanvas);
   const controls = initControls(canvas, deltaTimeObservable, true);
+  initPostProcessing();
   handleResize(canvas.width, canvas.height);
   deltaTimeObservable.subscribe(() => setCenter(controls.target));
   setInterval(notifyRendererStats, 1000, renderer);
@@ -36,7 +38,7 @@ remoteCanvasObservable.pipe(take(1)).subscribe(canvas => {
 initWorkerContext();
 
 export function handleResize(width: number, height: number) {
-  renderer?.setSize(width, height, false);
+  updateSize(width, height);
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
 }

@@ -4,6 +4,7 @@
   "info": "Model Info",
   "lights": "Toggle Lights",
   "rotate": "Toggle Auto Rotate",
+  "bloom": "Toggle Bloom Effect",
   "hint": "Drop VRM and VMD file to the screen to view them.",
   "fps": "Frames Per Second",
   "draw-call": "Draw Calls Per Frame",
