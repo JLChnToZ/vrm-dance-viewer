@@ -30,6 +30,7 @@ export function updateSize(width: number, height: number) {
 
 export function render(deltaTime?: number) {
   bloomPass.strength = bloomOn ? Math.max(0, 1 - (currentIntensity ** 0.3)) : 0;
+  renderer?.info.reset();
   composer?.render(deltaTime);
 }
 

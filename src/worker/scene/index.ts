@@ -33,6 +33,7 @@ remoteCanvasObservable.pipe(take(1)).subscribe(canvas => {
   initPostProcessing();
   handleResize(canvas.width, canvas.height);
   deltaTimeObservable.subscribe(() => setCenter(controls.target));
+  renderer.info.autoReset = false;
   setInterval(notifyRendererStats, 1000, renderer);
 });
 initWorkerContext();
