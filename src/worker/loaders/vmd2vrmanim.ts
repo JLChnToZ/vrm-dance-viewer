@@ -224,8 +224,8 @@ const IK_OFFSET_INIT = new Map<VMDBoneNames, IKOffsetInit>([
   [VMDBoneNames.Center, { x: 0, y: 1, z: 0, s: 10 }],
   [VMDBoneNames.LeftFootIK, { x: 1, y: 1, z: 0, s: 10, dx: true }],
   [VMDBoneNames.RightFootIK, { x: -1, y: 1, z: 0, s: 10, dx: true }],
-  [VMDBoneNames.LeftToeIK, { x: 0, y: -1, z: -1, s: 10, oy: 4, dx: true, dz: true }],
-  [VMDBoneNames.RightToeIK, { x: 0, y: -1, z: -1, s: 10, oy: 4, dx: true, dz: true }],
+  [VMDBoneNames.LeftToeIK, { x: 0, y: -1, z: -1, s: 10, oy: 2.5, dx: true, dz: true }],
+  [VMDBoneNames.RightToeIK, { x: 0, y: -1, z: -1, s: 10, oy: 2.5, dx: true, dz: true }],
 ]);
 const V3_ZERO = new Vector3();
 const Q_IDENTITY = new Quaternion();

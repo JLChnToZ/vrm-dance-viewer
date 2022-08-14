@@ -25,7 +25,7 @@ export class RemoteCanvas
 
   constructor(
     private token: number,
-    public undelyOffscreenCanvas: OffscreenCanvas,
+    public undelyOffscreenCanvas: any, // OffscreenCanvas,
     private clientRect: Partial<DOMRect>,
   ) {
     super();

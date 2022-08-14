@@ -19,6 +19,7 @@ export class RemoteCanvasHost {
     private messageService: WorkerMessageService,
     private canvas: HTMLCanvasElement,
   ) {
+    // @ts-ignore
     const offscreenCanvas = canvas.transferControlToOffscreen();
     messageService.on({
       [MessageType.registerEvent]: this._registerEvent.bind(this),

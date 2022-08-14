@@ -7,6 +7,7 @@ import { isSupported as isVRSupported } from '../utils/xr-detect';
 
 export const canvas = document.getElementById('canvas-container')!.appendChild(h('canvas', { tabIndex: 0 }));
 canvas.addEventListener('contextmenu', interceptEvent);
+canvas.addEventListener('click', interceptEvent);
 canvas.tabIndex = 0;
 
 const remoteCanvasHost = new RemoteCanvasHost(workerService, canvas);
@@ -45,7 +46,7 @@ remoteCanvasHost.resizeObservable.subscribe(({ contentRect: { width, height } })
 );
 
 remoteCanvasHost.interceptEvent = function(e: Event) {
-  console.log(e.type);
+  // console.log(e.type);
   switch (e.type) {
     case 'pointerdown': case 'pointerup':
     case 'touchstart': case 'touchend':
@@ -83,6 +84,7 @@ observeVisibilty.subscribe(
   state => workerService.trigger('enable', state === 'visible'),
 );
 
+/*
 (async () => {
   if (await isVRSupported)
     document.querySelector('.menu.controls')?.appendChild(
@@ -92,5 +94,6 @@ observeVisibilty.subscribe(
       }, h('i.cube.icon')),
     );
 })();
+*/
 
 workerService.on({ warn: alert.bind(window) });
