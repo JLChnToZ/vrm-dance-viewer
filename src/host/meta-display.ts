@@ -3,10 +3,11 @@ import { parseLink } from '../utils/link-parser';
 import h from 'hyperscript';
 import { VRMMeta, VRMSchema } from '@pixiv/three-vrm';
 import workerService from './worker-service';
-import { showModel as triggerShowModal } from '../utils/tocas-helpers';
 import { arrayBufferToObjectUrl } from '../utils/helper-functions';
 
 const copyrightRegex = /^\s*(©|\([Cc]\)|\[[Cc]\])/;
+
+const modal = document.querySelector<HTMLDivElement>('#dialogmodal')!;
 
 let hasMeta = false;
 let autoShown = true;
@@ -114,7 +115,16 @@ function setIcon(icon?: Blob | BlobPart | string | null) {
 }
 
 export function showMoreInfo() {
-  if (hasMeta) triggerShowModal(document.querySelector<HTMLDialogElement>('#dialogmodal')!);
+  if (hasMeta) triggerShowModal();
+}
+
+export function hideInfo() {
+  modal.classList.remove('is-visible');
+}
+
+
+function triggerShowModal() {
+  modal.classList.add('is-visible');
 }
 
 export function setAutoShown(newState: boolean) {
@@ -128,7 +138,7 @@ function formatCopyright(author?: string) {
 function getLicenseBlock(meta: VRMMeta) {
   if (!meta.licenseName) return;
   const license = licenseMetaMap[meta.licenseName];
-  const content = license.badgeUrl ? h('img.ts.middle.aligned.image', {
+  const content = license.badgeUrl ? h('img', {
     src: license.badgeUrl,
     alt: i18next.t(`License_${meta.licenseName}`),
   }) : i18next.t(`License_${meta.licenseName}`);
@@ -145,14 +155,12 @@ function prepareModel(meta: VRMMeta) {
   let title = meta.title || '';
   if (meta.version) title += i18next.t('version', meta);
   header.textContent = i18next.t('mata_title', { title });
-  const body = modal.querySelector('.content')!;
+  const body = modal.querySelector('.content-holder')!;
   let content = body;
   body.textContent = '';
   if (meta.texture) {
-    body.classList.add('image');
-    content = body.appendChild(h('div.description'));
     body.appendChild(
-      h('div.ts.medium.rounded.image',
+      h('div.ts-image.is-rounded.flow-right',
         h('img', {
           src: arrayBufferToObjectUrl(meta.texture as any),
           onload: (e: Event) => URL.revokeObjectURL((e.target as HTMLImageElement).src),
@@ -163,10 +171,10 @@ function prepareModel(meta: VRMMeta) {
     body.classList.remove('image');
   const license = meta.licenseName ? licenseMetaMap[meta.licenseName] : undefined;
   content.appendChild(
-    h('div.ts.list',
+    h('div.ts-list.is-unordered',
       h('div.item',
-        h('div.content',
-          h('div.header', formatCopyright(meta.author) || i18next.t('default_author_header')),
+        h('div.ts-content',
+          h('div.ts-header', formatCopyright(meta.author) || i18next.t('default_author_header')),
           ...parseLink(meta.contactInformation),
           h('br'),
           getLicenseBlock(meta),
@@ -174,85 +182,75 @@ function prepareModel(meta: VRMMeta) {
       ),
       meta.reference ?
         h('div.item',
-          h('div.content',
-            h('div.header', i18next.t('reference')),
+          h('div.ts-content',
+            h('div.ts-header', i18next.t('reference')),
             ...parseLink(meta.reference),
           ),
         ) :
         undefined,
       h('div.item',
-        h('div.content',
-          h('div.header', i18next.t('permissions')),
-          h('div.ts.three.column.relaxed.grid',
+        h('div.ts-content',
+          h('div.ts-header', i18next.t('permissions')),
+          h('div.ts-wrap.is-compact',
             meta.allowedUserName ?
-              h('div.center.aligned.column',
+              h('div.column.is-start-aligned',
+              h('span.ts-icon.is-circular.is-huge.is-masks-theater-icon'),
                 getAllowUserIcon(meta.allowedUserName),
                 h('label', i18next.t('allowedUser', { state: `Meta_${meta.allowedUserName}` })),
               ) :
               undefined,
             meta.sexualUssageName ?
-              h('div.center.aligned.column',
-                h('i.big.fitted.icons',
-                  h('i.venus.mars.circular.icon'),
-                  getMetaUsageIcon(meta.sexualUssageName)
-                ),
+              h('div.column.is-start-aligned',
+                h('span.ts-icon.is-circular.is-huge.is-mars-and-venus-burst-icon'),
+                getMetaUsageIcon(meta.sexualUssageName),
                 h('label', i18next.t('sexualUssage', { state: `Meta_${meta.sexualUssageName}` })),
               ) :
               undefined,
             meta.violentUssageName ?
-              h('div.center.aligned.column',
-                h('i.big.fitted.icons',
-                  h('i.bomb.circular.icon'),
-                  getMetaUsageIcon(meta.violentUssageName)
-                ),
+              h('div.column.is-start-aligned',
+                h('span.ts-icon.is-circular.is-huge.is-person-falling-burst-icon'),
+                getMetaUsageIcon(meta.violentUssageName),
                 h('label', i18next.t('violentUssage', { state: `Meta_${meta.violentUssageName}` })),
               ) :
               undefined,
             meta.commercialUssageName ?
-              h('div.center.aligned.column',
-                h('i.big.fitted.icons',
-                  h('i.dollar.circular.icon'),
-                  getMetaUsageIcon(meta.commercialUssageName)
-                ),
+              h('div.column.is-start-aligned',
+                h('span.ts-icon.is-circular.is-huge.is-hand-holding-dollar-icon'),
+                getMetaUsageIcon(meta.commercialUssageName),
                 h('label', i18next.t('commercialUssage', { state: `Meta_${meta.commercialUssageName}` })),
               ) :
               undefined,
             license?.redistrube != null ?
-              h('div.center.aligned.column',
-                h('i.big.fitted.icons',
-                  h('i.cloud.upload.circular.icon'),
-                  getMetaUsageIcon(license.redistrube)
-                ),
+              h('div.column.is-start-aligned',
+                h('span.ts-icon.is-circular.is-huge.is-share-nodes-icon'),
+                getMetaUsageIcon(license.redistrube),
                 h('label', i18next.t('redistrube', { state: `Meta_${license.redistrube ? 'Allow' : 'Disallow'}` })),
               ) :
               undefined,
             license?.modify != null ?
-              h('div.center.aligned.column',
-                h('i.big.fitted.icons',
-                  h('i.paint.brush.circular.icon'),
-                  getMetaUsageIcon(license.modify)
-                ),
+              h('div.column.is-start-aligned',
+                h('span.ts-icon.is-circular.is-huge.is-paintbrush-icon'),
+                getMetaUsageIcon(license.modify),
                 h('label', i18next.t('modify', { state: `Meta_${license.modify ? 'Allow' : 'Disallow'}` })),
               ) :
               undefined,
             license?.attribution != null ?
-              h('div.center.aligned.column',
-                h('i.big.fitted.icons',
-                  h('i.quote.right.circular.icon'),
-                  license.attribution ?
-                    h('i.corner.info.caution.icon') :
-                    h('i.corner.disabled.radio.icon')
-                ),
+              h('div.column.is-start-aligned',
+                h('span.ts-icon.is-circular.is-huge.is-signature-icon'),
+                license.attribution ?
+                  h('span.ts-icon.is-small.is-circle-exclamation-icon.is-spaced') :
+                  h('span.ts-icon.is-small.is-heart-icon.is-secondary.is-spaced'),
                 h('label', i18next.t('attribution', { state: `Attribution_${license.attribution ? 'Yes' : 'No'}` })),
               ) :
               undefined,
             meta.otherPermissionUrl ?
-              h('div.center.aligned.column',
+              h('div.column.is-start-aligned',
+                h('span.ts-icon.is-circular.is-huge.is-scale-balanced-icon'),
+                h('span.ts-icon.is-small.is-share-icon.is-spaced'),
                 h('a', {
                   href: meta.otherPermissionUrl,
                   target: '_blank'
                 },
-                  h('i.big.fitted.external.circular.icon'),
                   h('label', i18next.t('otherPermission')),
                 ),
               ) :
@@ -263,23 +261,23 @@ function prepareModel(meta: VRMMeta) {
     ),
   );
   hasMeta = true;
-  if (autoShown) triggerShowModal(modal);
+  if (autoShown) triggerShowModal();
 }
 
 function getMetaUsageIcon(usage: VRMSchema.MetaUssageName | boolean) {
   switch(usage) {
-    case 'Allow': case true: return h('i.corner.positive.check.icon');
-    case 'Disallow': case false: return h('i.corner.negative.dont.icon');
-    default: return h('i.corner.question.icon');
+    case 'Allow': case true: return h('span.ts-icon.is-small.is-circle-check-icon.is-spaced');
+    case 'Disallow': case false: return h('span.ts-icon.is-small.is-negative.is-circle-xmark-icon.is-spaced');
+    default: return h('span.ts-icon.is-small.is-circle-question-icon.is-spaced');
   }
 }
 
 function getAllowUserIcon(user: VRMSchema.MetaAllowedUserName) {
   switch(user) {
-    case 'Everyone': return h('i.big.fitted.globe.circular.icon');
-    case 'ExplicitlyLicensedPerson': return h('i.big.fitted.users.circular.icon');
-    case 'OnlyAuthor': return h('i.big.fitted.lock.circular.icon');
-    default: return h('i.big.fitted.question.circular.icon');
+    case 'Everyone': return h('span.ts-icon.is-earth-asia-icon.is-spaced');
+    case 'ExplicitlyLicensedPerson': return h('span.ts-icon.is-users-icon.is-spaced');
+    case 'OnlyAuthor': return h('span.ts-icon.is-lock-icon.is-spaced');
+    default: return h('span.ts-icon.is-circle-question-icon.is-spaced');
   }
 }
 

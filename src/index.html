@@ -7,39 +7,60 @@
   </head>
   <body>
     <noscript>JavaScript is required to view this page</noscript>
-    <span class="ts bottom left attached mini credits label" data-lang="hint"></span>
-    <span class="ts bottom right attached mini stats label">
-      <span data-tooltip-lang="fps" data-tooltip-position="top right">
-        F:<span class="number n5-digits" id="fps"></span>
-      </span>
-      &nbsp;
-      <span data-tooltip-lang="draw-call" data-tooltip-position="top right">
-        D:<span class="number n4-digits" id="draw-call"></span>
-      </span>
-      &nbsp;
-      <span data-tooltip-lang="face-count" data-tooltip-position="top right">
-        T:<span class="number n7-digits" id="face-count"></span>
-      </span>
-    </span>
-    <span class="ts icon controls compact mini menu">
-      <a class="item" id="open" data-tooltip-lang="open"><i class="folder open icon"></i></a>
-      <a class="item" id="info" data-tooltip-lang="info"><i class="notice circle icon"></i></a>
-      <div class="divider item"></div>
-      <a class="item" id="lights" data-tooltip-lang="lights"><i class="lightbulb icon"></i></a>
-      <a class="item" id="bloom" data-tooltip-lang="bloom"><i class="sun icon"></i></a>
-      <a class="item" id="rotate" data-tooltip-lang="rotate"><i class="repeat icon"></i></a>
-    </span>
+    <div class="ts-app-layout is-vertical is-full">
+      <div class="cell is-fluid" id="canvas-container"></div>
+      <div class="cell is-horizontal">
+        <div class="cell">
+          <div class="ts-content">
+            <div class="ts-app-navbar is-unlabeled is-fluid">
+              <button class="item" id="open" data-tooltip-lang="open"><span class="ts-icon is-folder-open-icon"></span><span class="label"></span></button>
+              <button class="item" id="info" data-tooltip-lang="info"><span class="ts-icon is-circle-info-icon"></span><span class="label"></span></button>
+              <button class="item" id="lights" data-tooltip-lang="lights"><span class="ts-icon is-lightbulb-icon"></span><span class="label"></span></button>
+              <button class="item" id="bloom" data-tooltip-lang="bloom"><span class="ts-icon is-sun-icon"></span><span class="label"></span></button>
+              <button class="item" id="rotate" data-tooltip-lang="rotate"><span class="ts-icon is-repeat-icon"></span><span class="label"></span></button>
+            </div>
+          </div>
+        </div>
+        <div class="cell is-fluid is-maximal-only">
+          <div class="ts-content">
+            <span class="ts-text credits" data-lang="hint"></span>
+          </div>
+        </div>
+        <div class="cell">
+          <div class="ts-content">
+            <span data-tooltip-lang="fps" data-tooltip-position="top right">
+              F:<span class="number n5-digits" id="fps"></span>
+            </span>
+            &nbsp;
+            <span data-tooltip-lang="draw-call" data-tooltip-position="top right">
+              D:<span class="number n4-digits" id="draw-call"></span>
+            </span>
+            &nbsp;
+            <span data-tooltip-lang="face-count" data-tooltip-position="top right">
+              T:<span class="number n7-digits" id="face-count"></span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
     <form class="hidden">
       <input type="file" id="selectfile" tabindex="-1" multiple accept=".vrm,.vmd,.bvh" />
     </form>
-    <div class="ts modals dimmer">
-      <dialog class="ts tiny closable modal" id="dialogmodal">
-        <div class="header"></div>
-        <div class="content"></div>
-        <div class="actions">
-          <button class="ts positive button" data-lang="ok"></button>
+    <div class="ts-modal is-big" id="dialogmodal">
+      <div class="content">
+        <div class="ts-content is-dense">
+          <div class="ts-row">
+            <div class="column is-fluid">
+              <div class="ts-header header"></div>
+            </div>
+            <div class="column">
+              <button class="ts-close" id="closeinfo"></button>
+            </div>
+          </div>
         </div>
-      </dialog>
+        <div class="ts-divider"></div>
+        <div class="ts-content content-holder"></div>
+      </div>
     </div>
     <div class="ts dimmer" id="loading">
       <div class="ts big loader"></div>

@@ -2,10 +2,9 @@ import './main.css';
 import './i18n';
 import { ajax } from 'rxjs/ajax';
 import { canvas, loadAnimation, loadModel, toggleAutoRotate, toggleBloom, toggleLights } from './host';
-import { setAutoShown, showMoreInfo } from './host/meta-display';
+import { hideInfo, setAutoShown, showMoreInfo } from './host/meta-display';
 import registerStats from './host/status';
 import { registerDropZone } from './utils/drag-drop';
-import { showSnack } from './utils/tocas-helpers';
 import { observeMediaQuery } from './utils/rx-helpers';
 import { interceptEvent, isInFrame } from './utils/helper-functions';
 import workerService from './host/worker-service';
@@ -63,7 +62,7 @@ function errorToSnackBar(error?: any) {
   let message: string | undefined;
   if (typeof error?.message === 'string')
     message = error.message;
-  if (message) showSnack(message);
+  // if (message) showSnack(message);
 }
 
 const searchParams = new URLSearchParams(location.search);
@@ -155,6 +154,7 @@ fileSelect?.addEventListener('change', e => {
   fileSelect.blur();
 });
 document.querySelector('#info')?.addEventListener('click', showMoreInfo);
+document.querySelector('#closeinfo')?.addEventListener('click', hideInfo);
 
 observeMediaQuery('(prefers-color-scheme:dark)').subscribe(matches =>
   document.querySelectorAll('.ts:not(.dimmer)').forEach(element =>

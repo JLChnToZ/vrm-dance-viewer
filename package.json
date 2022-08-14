@@ -38,7 +38,7 @@
     "rxjs": "latest",
     "three": "latest",
     "tlds": "latest",
-    "tocas-ui": "latest",
+    "tocas": "latest",
     "tslib": "latest"
   },
   "devDependencies": {

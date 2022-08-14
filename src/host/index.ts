@@ -5,7 +5,7 @@ import { observeVisibilty } from '../utils/rx-helpers';
 import workerService from './worker-service';
 import { isSupported as isVRSupported } from '../utils/xr-detect';
 
-export const canvas = document.body.appendChild(h('canvas', { tabIndex: 0 }));
+export const canvas = document.getElementById('canvas-container')!.appendChild(h('canvas', { tabIndex: 0 }));
 canvas.addEventListener('contextmenu', interceptEvent);
 canvas.tabIndex = 0;
 
