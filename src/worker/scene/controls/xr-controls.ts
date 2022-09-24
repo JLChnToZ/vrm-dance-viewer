@@ -1,6 +1,5 @@
 import { WorkerMessageService } from '../../../utils/message-service';
 import { isSupported } from '../../../utils/xr-detect';
-import { XRSession } from 'three';
 import { renderer } from '../renderer';
 import { isXR } from './common';
 

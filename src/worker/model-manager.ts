@@ -1,17 +1,15 @@
-import { VRM, VRMSchema, VRMUtils } from '@pixiv/three-vrm';
-import { extractThumbnailBlob } from '../utils/thumbnail-extractor';
-import { Subject } from 'rxjs';
-import { blob2ArrayBuffer } from '../utils/helper-functions';
-import { Group, Vector3 } from 'three';
+import { VRM, VRMCoreLoaderPlugin, VRMHumanBoneName, VRMUtils } from '@pixiv/three-vrm';
+import { lastValueFrom, Subject } from 'rxjs';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { deltaTimeObservable } from './scene';
-import { controls, panToTarget } from './scene/controls';
+import { panToTarget } from './scene/controls';
 import { scene } from './scene/scene';
 import { shareReplay, take, takeUntil } from 'rxjs/operators';
-import { WorkerMessageService } from '../utils/message-service';
+import { WorkerMessageService } from './worker-message-service-shim';
 
-const gltfLoader = new GLTFLoader();
-const v3 = new Vector3();
+const gltfLoader = new GLTFLoader().register(
+  parser => new VRMCoreLoaderPlugin(parser, { helperRoot: scene, autoUpdateHumanBones: true }),
+);
 
 let currentModel: VRM | undefined;
 
@@ -27,7 +25,7 @@ export async function load(data: ArrayBufferLike | string) {
     if (currentModel) {
       vrmUnloadSubject.next(currentModel);
       scene.remove(currentModel.scene);
-      currentModel.dispose();
+      VRMUtils.deepDispose(currentModel.scene);
       currentModel = undefined;
     }
     currentModel = model;
@@ -36,37 +34,25 @@ export async function load(data: ArrayBufferLike | string) {
     vrmLoadSubject.next(model);
     const modelUpdateOvservable = deltaTimeObservable.pipe(takeUntil(vrmUnloadSubject));
     modelUpdateOvservable.subscribe(model.update.bind(model));
-    const target = model.humanoid?.getBoneNode(VRMSchema.HumanoidBoneName.Hips);
+    const target = model.humanoid?.getRawBoneNode(VRMHumanBoneName.Hips);
     modelUpdateOvservable.subscribe(t => panToTarget(t, model.scene, target));
   } catch(error) {
     console.error(error);
   }
-  await deltaTimeObservable.pipe(take(2)).toPromise();
+  await lastValueFrom(deltaTimeObservable.pipe(take(2)));
 }
 
 export async function loadVRM(data: ArrayBufferLike | string) {
-  const gltf = await new Promise<GLTF>((resolve, reject) =>
-    gltfLoader.parse(data, '', resolve, ({ error }) => reject(error)),
-  );
+  const gltf = await gltfLoader.parseAsync(data, '');
+  console.log(gltf.userData);
+  const { vrmCore } = gltf.userData;
+  VRMUtils.rotateVRM0(vrmCore);
   VRMUtils.removeUnnecessaryJoints(gltf.scene);
-  return VRM.from(gltf);
+  return vrmCore as VRM;
 }
 
-async function notifyMeta(model: VRM) {
-  const { meta } = model;
-  const data: any = Object.assign({}, meta);
-  let thumb: ArrayBuffer | undefined;
-  if (meta?.texture) {
-    delete data.texture;
-    try {
-      data.texture = thumb = await blob2ArrayBuffer(
-        await extractThumbnailBlob(null, model, 256),
-      );
-    } catch(e) {
-      console.warn(e);
-    }
-  }
-  WorkerMessageService.host.callAndTransfer('displayMeta', [data], thumb ? [thumb] : undefined, true);
+function notifyMeta(model: VRM) {
+  WorkerMessageService.host.call('displayMeta', model.meta);
 }
 
 WorkerMessageService.host.on({ loadModel: load });

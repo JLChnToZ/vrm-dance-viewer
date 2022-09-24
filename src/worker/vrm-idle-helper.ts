@@ -1,10 +1,8 @@
-import { VRM, VRMLookAtHead, VRMSchema } from '@pixiv/three-vrm';
+import { VRM, VRMHumanBoneName as BoneNames, VRMExpressionPresetName, VRMLookAt } from '@pixiv/three-vrm';
 import { Euler, MathUtils, Matrix4, Quaternion, Vector3 } from 'three';
 import { vrmUnloadObservable } from './model-manager';
 import { camera } from './scene/camera';
 import { clampByRadian } from '../utils/three-helpers';
-
-const BoneNames = VRMSchema.HumanoidBoneName;
 
 const LERP_SCALE = 6;
 const HEAD_ROTATE_DAMP = 1;
@@ -19,7 +17,7 @@ const MAX_BLINK_DEALY = 10;
 const BLINK_DURATION = 0.2;
 const BREATH_CYCLE = 2;
 
-const lookAts = new WeakMap<VRM, VRMLookAtHead>();
+const lookAts = new WeakMap<VRM, VRMLookAt>();
 const totalTimes = new WeakMap<VRM, number>();
 const blinkDelays = new WeakMap<VRM, number>();
 
@@ -42,7 +40,7 @@ const rightThumbIdleRotation = getQuaternionFromAngle(0, -THUMB_IDLE_ANGLE, 0);
 const rightShoulderBreathRotation = getQuaternionFromAngle(0, 0, -SHOULDER_BREATH_ANGLE);
 const righArmBreathRotation = getQuaternionFromAngle(0, 0, SHOULDER_BREATH_ANGLE - ARM_IDLE_ANGLE);
 
-const idlePose = new Map<VRMSchema.HumanoidBoneName, Quaternion>([
+const idlePose = new Map<BoneNames, Quaternion>([
   [BoneNames.LeftShoulder, new Quaternion()],
   [BoneNames.LeftUpperArm, leftArmIdleRotation],
   [BoneNames.LeftIndexDistal, leftFingerIdleRotation],
@@ -58,7 +56,7 @@ const idlePose = new Map<VRMSchema.HumanoidBoneName, Quaternion>([
   [BoneNames.LeftRingIntermediate, leftFingerIdleRotation],
   [BoneNames.LeftRingProximal, leftFingerIdleRotation],
   [BoneNames.LeftThumbDistal, leftThumbIdleRotation],
-  [BoneNames.LeftThumbIntermediate, leftThumbIdleRotation],
+  [BoneNames.LeftThumbMetacarpal, leftThumbIdleRotation],
   [BoneNames.LeftThumbProximal, leftFingerIdleRotation],
   [BoneNames.RightShoulder, new Quaternion()],
   [BoneNames.RightUpperArm, righArmIdleRotation],
@@ -75,10 +73,10 @@ const idlePose = new Map<VRMSchema.HumanoidBoneName, Quaternion>([
   [BoneNames.RightRingIntermediate, rightFingerIdleRotation],
   [BoneNames.RightRingProximal, rightFingerIdleRotation],
   [BoneNames.RightThumbDistal, rightThumbIdleRotation],
-  [BoneNames.RightThumbIntermediate, rightThumbIdleRotation],
+  [BoneNames.RightThumbMetacarpal, rightThumbIdleRotation],
   [BoneNames.RightThumbProximal, rightFingerIdleRotation],
 ]);
-const breathPose = new Map<VRMSchema.HumanoidBoneName, Quaternion>([
+const breathPose = new Map<BoneNames, Quaternion>([
   [BoneNames.LeftShoulder, leftShoulderBreathRotation],
   [BoneNames.LeftUpperArm, leftArmBreathRotation],
   [BoneNames.RightShoulder, rightShoulderBreathRotation],
@@ -112,7 +110,7 @@ export function updateModel(model: VRM, deltaTime: number) {
 }
 
 function updateHead(model: VRM, deltaTime: number) {
-  const bone = model.firstPerson?.firstPersonBone;
+  const bone = model.firstPerson?.humanoid.getNormalizedBoneNode(BoneNames.Head);
   if (!bone) return;
   bone.matrixWorld.decompose(position, rotation, vector3);
   position2.setFromMatrixPosition(camera.matrixWorld);
@@ -137,15 +135,15 @@ function updateHead(model: VRM, deltaTime: number) {
 }
 
 function updateEyeBlink(model: VRM, deltaTime: number) {
-  if (!model.blendShapeProxy) return;
+  if (!model.expressionManager) return;
   let v = blinkDelays.get(model);
   if (v == null || v < -BLINK_DURATION)
     v = MathUtils.randFloat(MIN_BLINK_DELAY, MAX_BLINK_DEALY);
   else
     v -= deltaTime;
   blinkDelays.set(model, v);
-  model.blendShapeProxy.setValue(
-    VRMSchema.BlendShapePresetName.Blink,
+  model.expressionManager.setValue(
+    VRMExpressionPresetName.Blink,
     v > LOOK_CAMERA_THRESHOLD ? 0 : MathUtils.pingpong(-v, BLINK_DURATION / 2) * 2 / BLINK_DURATION,
   );
 }

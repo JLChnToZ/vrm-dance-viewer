@@ -15,8 +15,8 @@ export const i18n = i18next.use(HTTPBackend).use(LanguageDetector).init({
       return value;
     },
   },
-  whitelist: ['en', 'zh', 'zh-cn', 'ja'],
-}).then(() => {
+  supportedLngs: ['en', 'zh', 'zh-cn', 'ja'],
+}, () => {
   document.title = i18next.t('appName');
   for (const element of document.querySelectorAll<HTMLElement>('*[data-lang]'))
     element.textContent = i18next.t(element.dataset.lang ?? '');

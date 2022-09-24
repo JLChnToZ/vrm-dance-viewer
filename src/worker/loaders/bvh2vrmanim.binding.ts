@@ -1,11 +1,9 @@
-import { VRM, VRMSchema } from '@pixiv/three-vrm';
+import { VRM, VRMHumanBoneName as HumanoidBoneName } from '@pixiv/three-vrm';
 import { BVHLoader } from 'three/examples/jsm/loaders/BVHLoader';
 import { Skeleton, KeyframeTrack, Object3D, Quaternion, Vector3 } from 'three';
 import { centerOfDescendant, transverse } from '../../utils/three-helpers';
 
 const matcher = /^\.bones\[(.+)\]\.(position|quaternion)$/;
-
-const { HumanoidBoneName } = VRMSchema;
 
 const tempQ = new Quaternion();
 const tempV3 = new Vector3();
@@ -28,7 +26,7 @@ function selectBone(
 
 function getSpineAndHips(
   hips: Object3D,
-  map: Map<VRMSchema.HumanoidBoneName, Object3D>
+  map: Map<HumanoidBoneName, Object3D>
 ) {
   if (hips.children.length !== 3)
     throw new TypeError('Hips require 3 children.');
@@ -57,7 +55,7 @@ function getSpineAndHips(
 
 function getNeckAndArms(
   chest: Object3D,
-  map: Map<VRMSchema.HumanoidBoneName, Object3D>
+  map: Map<HumanoidBoneName, Object3D>
 ) {
   if (chest.children.length !== 3)
     throw new TypeError('Chest require 3 children.');
@@ -85,7 +83,7 @@ function getNeckAndArms(
 }
 
 function getArm(
-  map: Map<VRMSchema.HumanoidBoneName, Object3D>,
+  map: Map<HumanoidBoneName, Object3D>,
   isRight?: boolean
 ) {
   const bones = Array.from(
@@ -129,7 +127,7 @@ function getArm(
 }
 
 function getLeg(
-  map: Map<VRMSchema.HumanoidBoneName, Object3D>,
+  map: Map<HumanoidBoneName, Object3D>,
   isRight?: boolean
 ) {
   const bones = Array.from(
@@ -196,7 +194,7 @@ function detectSkeleton(skeleton: Skeleton) {
       break;
     }
   if (!hips) throw new TypeError('Hips not found');
-  const map = new Map<VRMSchema.HumanoidBoneName, Object3D>();
+  const map = new Map<HumanoidBoneName, Object3D>();
   getSpineAndHips(hips, map);
   getLeg(map, false);
   getLeg(map, true);
@@ -246,7 +244,7 @@ function detectSkeleton(skeleton: Skeleton) {
       map.set(HumanoidBoneName.Head, head);
       break;
   }
-  const finalMap = new Map<string, [VRMSchema.HumanoidBoneName, Object3D]>();
+  const finalMap = new Map<string, [HumanoidBoneName, Object3D]>();
   for (const [boneName, bone] of map)
     finalMap.set(bone.name, [boneName, bone]);
   return finalMap;

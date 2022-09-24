@@ -1,5 +1,5 @@
 import { combineLatest } from 'rxjs';
-import { pluck, shareReplay } from 'rxjs/operators';
+import { map, shareReplay } from 'rxjs/operators';
 import workerService from './worker-service';
 import { observeMediaQuery } from '../utils/rx-helpers';
 
@@ -30,17 +30,17 @@ export default function register(fpsDisp: HTMLElement, drawCallDisp: HTMLElement
   if (!fpsDisp.textContent) fpsDisp.textContent = '0';
   if (!drawCallDisp.textContent) drawCallDisp.textContent = '0';
   if (!triCntDisp.textContent) triCntDisp.textContent = '0';
-  combineLatest([statsUpdate.pipe(pluck('fps')), darkThemeObservable])
+  combineLatest([statsUpdate.pipe(map(stats => stats.fps)), darkThemeObservable])
   .subscribe(([fps, isDarkTheme]) => {
     fpsDisp.textContent = fps.toFixed(2);
     fpsDisp.style.color = calculateColor(fps, 20, 40, 60, 120, isDarkTheme);
   });
-  combineLatest([statsUpdate.pipe(pluck('render', 'calls')), darkThemeObservable])
+  combineLatest([statsUpdate.pipe(map(stats => stats.render.calls)), darkThemeObservable])
   .subscribe(([calls, isDarkTheme]) => {
     drawCallDisp.textContent = calls.toString();
     drawCallDisp.style.color = calculateColor(-calls, -128, -96, -32, 0, isDarkTheme);
   });
-  combineLatest([statsUpdate.pipe(pluck('render', 'triangles')), darkThemeObservable])
+  combineLatest([statsUpdate.pipe(map(stats => stats.render.triangles)), darkThemeObservable])
   .subscribe(([triangles, isDarkTheme]) => {
     triCntDisp.textContent = triangles.toString();
     triCntDisp.style.color = calculateColor(-triangles, -5e5, -5e4, -5e3, 0, isDarkTheme);

@@ -1,7 +1,7 @@
 import { Color, DirectionalLight, Fog, HemisphereLight } from 'three';
 import { Observable } from 'rxjs';
 import { BACKGROUND_COLOR, BACKGROUND_COLOR_DIM, scene } from './scene';
-import { WorkerMessageService } from '../../utils/message-service';
+import { WorkerMessageService } from '../worker-message-service-shim';
 
 const bgColor = new Color(BACKGROUND_COLOR_DIM);
 scene.background = new Color(bgColor);

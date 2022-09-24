@@ -4,11 +4,11 @@ import { convert as convertBVH } from './loaders/bvh2vrmanim.binding';
 import { deltaTimeObservable } from './scene';
 import { AnimationAction, AnimationClip, AnimationMixer } from 'three';
 import { take } from 'rxjs/operators';
-import { Subscription } from 'rxjs';
+import { Subscription, firstValueFrom, lastValueFrom } from 'rxjs';
 import { VRM, VRMPose } from '@pixiv/three-vrm';
 import VRMIKHandler from './vrm-ik-handler';
 import VRMModelNoise from './vrm-model-noise';
-import { WorkerMessageService } from '../utils/message-service';
+import { WorkerMessageService } from './worker-message-service-shim';
 import { registerModel, unregisterModel, updateModel } from './vrm-idle-helper';
 
 const mixers = new WeakMap<VRM, AnimationMixer>();
@@ -28,9 +28,9 @@ vrmLoadObservable.subscribe(model => {
     const { humanoid } = model;
     if (humanoid) {
       let pose = poses.get(model);
-      if (pose) humanoid.setPose(pose);
+      if (pose) humanoid.setNormalizedPose(pose);
       mixer.update(time);
-      pose = humanoid.getPose();
+      pose = humanoid.getNormalizedPose();
       if (pose) poses.set(model, pose);
       else poses.delete(model);
     } else
@@ -50,7 +50,7 @@ vrmUnloadObservable.subscribe(model => {
 });
 
 export async function load(data: ArrayBufferLike, type: string) {
-  const model = await vrmLoadObservable.pipe(take(1)).toPromise();
+  const model = await firstValueFrom(vrmLoadObservable);
   const mixer = mixers.get(model);
   if (!mixer) return;
   VRMIKHandler.get(model).disableAll();
@@ -74,7 +74,7 @@ export async function load(data: ArrayBufferLike, type: string) {
     }
   } catch(e) {
     clip = undefined;
-    model.humanoid?.resetPose();
+    model.humanoid?.resetNormalizedPose();
     poses.delete(model);
     console.error(e);
     if (e instanceof Error)
@@ -87,7 +87,7 @@ export async function load(data: ArrayBufferLike, type: string) {
     clips.set(mixer, clip);
     actions.set(mixer, mixer.clipAction(clip).play());
   }
-  await deltaTimeObservable.pipe(take(2)).toPromise();
+  await lastValueFrom(deltaTimeObservable.pipe(take(2)));
 }
 
 WorkerMessageService.host.on({ loadAnimation: load });

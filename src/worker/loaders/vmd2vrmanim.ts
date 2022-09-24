@@ -1,5 +1,5 @@
 import { Vector3, Quaternion, MathUtils } from 'three';
-import { VRMSchema } from '@pixiv/three-vrm';
+import { VRMHumanBoneName as HumanoidBoneName, VRMExpressionPresetName as BlendShapePresetName } from '@pixiv/three-vrm-core';
 import { Parser, VmdFile, CharsetEncoder } from 'mmd-parser';
 import { AnimationData, Timeline, VRMOffsets } from './vmd2vrmanim.binding';
 import { isTruely } from '../../utils/helper-functions';
@@ -125,9 +125,9 @@ interface IKOffsetInit {
   /** Force override Z value? */ dz?: boolean;
 }
 
-const { HumanoidBoneName, BlendShapePresetName } = VRMSchema;
+// const { HumanoidBoneName, BlendShapePresetName } = VRMSchema;
 
-const VRM_VMD_BONE_MAP = new Map<VMDBoneNames, VRMSchema.HumanoidBoneName>([
+const VRM_VMD_BONE_MAP = new Map<VMDBoneNames, HumanoidBoneName>([
   [VMDBoneNames.Hips, HumanoidBoneName.Hips],
   [VMDBoneNames.Spine, HumanoidBoneName.Spine],
   [VMDBoneNames.Chest, HumanoidBoneName.Chest],
@@ -139,7 +139,7 @@ const VRM_VMD_BONE_MAP = new Map<VMDBoneNames, VRMSchema.HumanoidBoneName>([
   [VMDBoneNames.LeftLowerArm, HumanoidBoneName.LeftLowerArm],
   [VMDBoneNames.LeftHand, HumanoidBoneName.LeftHand],
   [VMDBoneNames.LeftThumbProximal, HumanoidBoneName.LeftThumbProximal],
-  [VMDBoneNames.LeftThumbIntermediate, HumanoidBoneName.LeftThumbIntermediate],
+  [VMDBoneNames.LeftThumbIntermediate, HumanoidBoneName.LeftThumbMetacarpal],
   [VMDBoneNames.LeftThumbDistal, HumanoidBoneName.LeftThumbDistal],
   [VMDBoneNames.LeftIndexProximal, HumanoidBoneName.LeftIndexProximal],
   [VMDBoneNames.LeftIndexIntermediate, HumanoidBoneName.LeftIndexIntermediate],
@@ -171,7 +171,7 @@ const VRM_VMD_BONE_MAP = new Map<VMDBoneNames, VRMSchema.HumanoidBoneName>([
   [VMDBoneNames.RightThumbProximal, HumanoidBoneName.RightThumbProximal],
   [
     VMDBoneNames.RightThumbIntermediate,
-    HumanoidBoneName.RightThumbIntermediate,
+    HumanoidBoneName.RightThumbMetacarpal,
   ],
   [VMDBoneNames.RightThumbDistal, HumanoidBoneName.RightThumbDistal],
   [VMDBoneNames.RightIndexProximal, HumanoidBoneName.RightIndexProximal],
@@ -200,7 +200,7 @@ const VRM_VMD_BONE_MAP = new Map<VMDBoneNames, VRMSchema.HumanoidBoneName>([
   [VMDBoneNames.RightFoot, HumanoidBoneName.RightFoot],
   [VMDBoneNames.RightToes, HumanoidBoneName.RightToes],
 ]);
-const VMD_VRM_IK_MAP = new Map<VMDBoneNames, VRMSchema.HumanoidBoneName>([
+const VMD_VRM_IK_MAP = new Map<VMDBoneNames, HumanoidBoneName>([
   [VMDBoneNames.LeftFootIK, HumanoidBoneName.LeftFoot],
   [VMDBoneNames.LeftToeIK, HumanoidBoneName.LeftToes],
   [VMDBoneNames.RightFootIK, HumanoidBoneName.RightFoot],
@@ -210,15 +210,15 @@ const VMD_BONE_NAMES = new Set<VMDBoneNames>(VRM_VMD_BONE_MAP.keys());
 Array.from(VMD_VRM_IK_MAP.keys()).forEach(VMD_BONE_NAMES.add, VMD_BONE_NAMES);
 VMD_BONE_NAMES.add(VMDBoneNames.Root);
 VMD_BONE_NAMES.add(VMDBoneNames.Center);
-const VMD_VRM_MORTH_MAP = new Map<VMDMorphNames, VRMSchema.BlendShapePresetName>([
+const VMD_VRM_MORTH_MAP = new Map<VMDMorphNames, BlendShapePresetName>([
   [VMDMorphNames.Blink, BlendShapePresetName.Blink],
-  [VMDMorphNames.BlinkL, BlendShapePresetName.BlinkL],
-  [VMDMorphNames.BlinkR, BlendShapePresetName.BlinkR],
-  [VMDMorphNames.A, BlendShapePresetName.A],
-  [VMDMorphNames.I, BlendShapePresetName.I],
-  [VMDMorphNames.U, BlendShapePresetName.U],
-  [VMDMorphNames.E, BlendShapePresetName.E],
-  [VMDMorphNames.O, BlendShapePresetName.O],
+  [VMDMorphNames.BlinkL, BlendShapePresetName.BlinkLeft],
+  [VMDMorphNames.BlinkR, BlendShapePresetName.BlinkRight],
+  [VMDMorphNames.A, BlendShapePresetName.Aa],
+  [VMDMorphNames.I, BlendShapePresetName.Ih],
+  [VMDMorphNames.U, BlendShapePresetName.Ou],
+  [VMDMorphNames.E, BlendShapePresetName.Ee],
+  [VMDMorphNames.O, BlendShapePresetName.Oh],
 ]);
 const IK_OFFSET_INIT = new Map<VMDBoneNames, IKOffsetInit>([
   [VMDBoneNames.Center, { x: 0, y: 1, z: 0, s: 10 }],
@@ -230,7 +230,7 @@ const IK_OFFSET_INIT = new Map<VMDBoneNames, IKOffsetInit>([
 const V3_ZERO = new Vector3();
 const Q_IDENTITY = new Quaternion();
 const Z_30_DEG_CW = new Quaternion().setFromAxisAngle(tempV3.set(0, 0, 1), 30 * MathUtils.DEG2RAD);
-const Z_30_DEG_CCW = Z_30_DEG_CW.clone().inverse();
+const Z_30_DEG_CCW = Z_30_DEG_CW.clone().invert();
 
 export function convert(
   buffer: ArrayBufferLike,
@@ -543,7 +543,7 @@ function localizeTimeline(...tls: [Keyframe[], Keyframe[]]) {
           fp.position
         ),
         rotation: (fc.isNew ? fc.rotation : fc.rotation.clone()).multiply(
-          tempQ.copy(fp.rotation).inverse()
+          tempQ.copy(fp.rotation).invert()
         ),
       };
     }

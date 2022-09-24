@@ -2,7 +2,7 @@ import { Box3, MathUtils, MOUSE, Object3D, TOUCH, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { Observable } from 'rxjs';
 import { camera } from '../camera';
-import { WorkerMessageService } from '../../../utils/message-service';
+import { WorkerMessageService } from '../../worker-message-service-shim';
 import { isXR } from './common';
 
 export let controls: OrbitControls | undefined;

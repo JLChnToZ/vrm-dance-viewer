@@ -1,5 +1,7 @@
 import './main.css';
 import './i18n';
+import './worker';
+import { firstValueFrom } from 'rxjs';
 import { ajax } from 'rxjs/ajax';
 import { canvas, loadAnimation, loadModel, toggleAutoRotate, toggleBloom, toggleLights } from './host';
 import { hideInfo, setAutoShown, showMoreInfo } from './host/meta-display';
@@ -100,20 +102,20 @@ if (searchParams.has('nobloom'))
 const vrmUrl = searchParams.get('vrm');
 if (vrmUrl)
   loadingPromises.push((async () => {
-    const { response } = await ajax({
+    const { response } = await firstValueFrom(ajax<Blob>({
       url: vrmUrl,
       responseType: 'blob',
-    }).toPromise();
+    }));
     return loadModel(response);
   })());
 
 const animUrl = searchParams.get('anim');
 if (animUrl)
   loadingPromises.push((async () => {
-    const { response } = await ajax({
+    const { response } = await firstValueFrom(ajax<Blob>({
       url: animUrl,
       responseType: 'blob',
-    }).toPromise();
+    }));
     let animType = searchParams.get('animtype');
     if (!animType) {
       if (animUrl.endsWith('.vmd'))

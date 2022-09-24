@@ -9,7 +9,8 @@ import {
 } from 'three';
 import {
   VRM,
-  VRMSchema,
+  VRMHumanBoneName,
+  VRMExpressionPresetName,
 } from '@pixiv/three-vrm';
 import VRMIKHandler from '../vrm-ik-handler';
 import { convert as convertSync } from './vmd2vrmanim';
@@ -20,7 +21,7 @@ export interface AnimationData {
 }
 
 export interface Timeline {
-  name: VRMSchema.HumanoidBoneName | VRMSchema.BlendShapePresetName;
+  name: VRMHumanBoneName | VRMExpressionPresetName;
   type: string;
   isIK?: boolean;
   times: number[];
@@ -42,15 +43,14 @@ export function convert(buffer: ArrayBufferLike, vrm?: VRM) {
 export function toOffset(vrm: VRM): VRMOffsets {
   const { humanoid } = vrm;
   if (!humanoid) throw new Error('VRM does not have humanoid');
-  const currentPose = humanoid.getPose();
-  humanoid.resetPose();
-  const { HumanoidBoneName } = VRMSchema;
-  const hips = humanoid.getBoneNode(HumanoidBoneName.Hips);
-  const leftFoot = humanoid.getBoneNode(HumanoidBoneName.LeftFoot);
-  const leftToe = humanoid.getBoneNode(HumanoidBoneName.LeftToes);
-  const rightFoot = humanoid.getBoneNode(HumanoidBoneName.RightFoot);
-  const rightToe = humanoid.getBoneNode(HumanoidBoneName.RightToes);
-  humanoid.setPose(currentPose);
+  const currentPose = humanoid.getNormalizedPose();
+  humanoid.resetNormalizedPose();
+  const hips = humanoid.getNormalizedBoneNode(VRMHumanBoneName.Hips);
+  const leftFoot = humanoid.getNormalizedBoneNode(VRMHumanBoneName.LeftFoot);
+  const leftToe = humanoid.getNormalizedBoneNode(VRMHumanBoneName.LeftToes);
+  const rightFoot = humanoid.getNormalizedBoneNode(VRMHumanBoneName.RightFoot);
+  const rightToe = humanoid.getNormalizedBoneNode(VRMHumanBoneName.RightToes);
+  humanoid.setNormalizedPose(currentPose);
   return {
     hipsOffset: calculatePosition(hips, hips),
     leftFootOffset: calculatePosition(hips, leftFoot),
@@ -83,7 +83,7 @@ export function bindToVRM(data: AnimationData, vrm: VRM) {
     let srcName: string;
     switch (type) {
       case 'morph': {
-        const track = vrm.blendShapeProxy?.getBlendShapeTrackName(name);
+        const track = vrm.expressionManager?.getExpressionTrackName(name);
         if (!track) continue;
         srcName = track;
         break;
@@ -93,13 +93,13 @@ export function bindToVRM(data: AnimationData, vrm: VRM) {
         if (isIK) {
           const handler = VRMIKHandler.get(vrm);
           const target = handler.getAndEnableIK(
-            name as VRMSchema.HumanoidBoneName
+            name as VRMHumanBoneName
           );
           if (!target) continue;
           srcName = target.name;
         } else {
-          const bone = vrm.humanoid?.getBone(
-            name as VRMSchema.HumanoidBoneName
+          const bone = vrm.humanoid?.getNormalizedBone(
+            name as VRMHumanBoneName
           );
           if (!bone) continue;
           srcName = bone.node.name;

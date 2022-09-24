@@ -1,8 +1,8 @@
-import { GridHelper, Mesh, MeshLambertMaterial, PlaneBufferGeometry, Vector3 } from 'three';
+import { GridHelper, Mesh, MeshLambertMaterial, PlaneGeometry, Vector3 } from 'three';
 import { scene } from './scene';
 
 const floor = new Mesh(
-  new PlaneBufferGeometry(100, 100),
+  new PlaneGeometry(100, 100),
   new MeshLambertMaterial({
     color: 0x999999,
     depthWrite: true,

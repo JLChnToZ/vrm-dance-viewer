@@ -1,4 +1,4 @@
-import { VRM, VRMHumanoid, VRMSchema } from '@pixiv/three-vrm';
+import { VRM, VRMHumanoid, VRMHumanBoneName } from '@pixiv/three-vrm';
 import { Euler, MathUtils, Object3D, Quaternion } from 'three';
 
 interface NoiseConfig {
@@ -27,8 +27,8 @@ const singleAxisNoise: NoiseConfig = {
   zmin: 0, zmax: 0,
 }
 
-const BoneNames = VRMSchema.HumanoidBoneName;
-const boneNoiseConfigs = new Map<VRMSchema.HumanoidBoneName, NoiseConfig>([
+const BoneNames = VRMHumanBoneName;
+const boneNoiseConfigs = new Map<VRMHumanBoneName, NoiseConfig>([
   [BoneNames.Chest, defaultNoise],
   [BoneNames.Head, defaultNoise],
   // [BoneNames.Hips, defaultNoise],
@@ -52,7 +52,7 @@ const boneNoiseConfigs = new Map<VRMSchema.HumanoidBoneName, NoiseConfig>([
   [BoneNames.LeftRingProximal, defaultNoise],
   [BoneNames.LeftShoulder, defaultNoise],
   [BoneNames.LeftThumbDistal, singleAxisNoise],
-  [BoneNames.LeftThumbIntermediate, singleAxisNoise],
+  [BoneNames.LeftThumbMetacarpal, singleAxisNoise],
   [BoneNames.LeftThumbProximal, defaultNoise],
   [BoneNames.LeftToes, singleAxisNoise],
   [BoneNames.LeftUpperArm, defaultNoise],
@@ -77,7 +77,7 @@ const boneNoiseConfigs = new Map<VRMSchema.HumanoidBoneName, NoiseConfig>([
   [BoneNames.RightRingProximal, defaultNoise],
   [BoneNames.RightShoulder, defaultNoise],
   [BoneNames.RightThumbDistal, singleAxisNoise],
-  [BoneNames.RightThumbIntermediate, singleAxisNoise],
+  [BoneNames.RightThumbMetacarpal, singleAxisNoise],
   [BoneNames.RightThumbProximal, defaultNoise],
   [BoneNames.RightToes, singleAxisNoise],
   [BoneNames.RightUpperArm, defaultNoise],
@@ -138,10 +138,10 @@ export default class VRMModelNoise {
   private constructor(
     public humanoid: VRMHumanoid,
   ) {
-    const pose = humanoid.getPose();
-    humanoid.resetPose();
+    const pose = humanoid.getNormalizedPose();
+    humanoid.resetNormalizedPose();
     for (const [boneName, config] of boneNoiseConfigs) {
-      const bone = humanoid.getBoneNode(boneName);
+      const bone = humanoid.getNormalizedBoneNode(boneName);
       if (!bone) continue;
       this.channels.push(new VRMModelNoiseChannel(
         bone,
@@ -151,7 +151,7 @@ export default class VRMModelNoise {
         intensity,
       ));
     }
-    humanoid.setPose(pose);
+    humanoid.setNormalizedPose(pose);
   }
 
   update(deltaTime: number, reset?: boolean) {
