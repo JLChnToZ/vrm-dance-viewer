@@ -1,6 +1,6 @@
 import { VRM, VRMCoreLoaderPlugin, VRMHumanBoneName, VRMUtils } from '@pixiv/three-vrm';
 import { lastValueFrom, Subject } from 'rxjs';
-import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { deltaTimeObservable } from './scene';
 import { panToTarget } from './scene/controls';
 import { scene } from './scene/scene';

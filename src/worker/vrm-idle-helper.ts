@@ -4,14 +4,14 @@ import { vrmUnloadObservable } from './model-manager';
 import { camera } from './scene/camera';
 import { clampByRadian } from '../utils/three-helpers';
 
-const LERP_SCALE = 6;
+const LERP_SCALE = 30;
 const HEAD_ROTATE_DAMP = 1;
-const HEAD_CLAMP_ANGLE = 60 * MathUtils.DEG2RAD;
+const HEAD_CLAMP_ANGLE = MathUtils.degToRad(60);
 const LOOK_CAMERA_THRESHOLD = 0;
-const ARM_IDLE_ANGLE = 75 * MathUtils.DEG2RAD;
-const FINGER_IDLE_ANGLE = 15 * MathUtils.DEG2RAD;
-const THUMB_IDLE_ANGLE = 30 * MathUtils.DEG2RAD;
-const SHOULDER_BREATH_ANGLE = -5 * MathUtils.DEG2RAD;
+const ARM_IDLE_ANGLE = MathUtils.degToRad(75);
+const FINGER_IDLE_ANGLE = MathUtils.degToRad(15);
+const THUMB_IDLE_ANGLE = MathUtils.degToRad(30);
+const SHOULDER_BREATH_ANGLE = MathUtils.degToRad(-5);
 const MIN_BLINK_DELAY = 0.5;
 const MAX_BLINK_DEALY = 10;
 const BLINK_DURATION = 0.2;
@@ -28,7 +28,7 @@ const rotation3 = new Quaternion();
 const position = new Vector3();
 const position2 = new Vector3();
 const matrix = new Matrix4();
-const euler = new Euler();
+const euler = new Euler(0, 0, 0, VRMLookAt.EULER_ORDER);
 const leftArmIdleRotation = getQuaternionFromAngle(0, 0, ARM_IDLE_ANGLE);
 const leftFingerIdleRotation = getQuaternionFromAngle(0, 0, FINGER_IDLE_ANGLE);
 const leftThumbIdleRotation = getQuaternionFromAngle(0, THUMB_IDLE_ANGLE, 0);
@@ -111,27 +111,28 @@ export function updateModel(model: VRM, deltaTime: number) {
 
 function updateHead(model: VRM, deltaTime: number) {
   const bone = model.firstPerson?.humanoid.getNormalizedBoneNode(BoneNames.Head);
-  if (!bone) return;
-  bone.matrixWorld.decompose(position, rotation, vector3);
-  position2.setFromMatrixPosition(camera.matrixWorld);
-  matrix.lookAt(position, position2, vector3.set(0, 1, 0));
-  vector3.set(0, 0, 1).applyMatrix4(matrix);
-  bone.applyQuaternion(
-    rotation2.copy(rotation).slerp(
-      vector3.z < 0 ? rotation3.identity() : rotation3.setFromEuler(
-        euler.setFromRotationMatrix(matrix).set(
-          clampByRadian(euler.x, -HEAD_CLAMP_ANGLE, HEAD_CLAMP_ANGLE),
-          clampByRadian(euler.y, -HEAD_CLAMP_ANGLE, HEAD_CLAMP_ANGLE),
-          clampByRadian(euler.z, -HEAD_CLAMP_ANGLE, HEAD_CLAMP_ANGLE),
-        ),
+  if (bone) {
+    matrix.lookAt(
+      bone.getWorldPosition(position),
+      camera.getWorldPosition(position2),
+      vector3.set(0, 1, 0),
+    );
+    vector3.set(0, 0, 1).applyMatrix4(matrix);
+    if (vector3.z < 0)
+      euler.setFromRotationMatrix(matrix).set(
+        clampByRadian(-euler.x, -HEAD_CLAMP_ANGLE, HEAD_CLAMP_ANGLE),
+        clampByRadian(Math.PI + euler.y, -HEAD_CLAMP_ANGLE, HEAD_CLAMP_ANGLE) + Math.PI,
+        clampByRadian(euler.z, -HEAD_CLAMP_ANGLE, HEAD_CLAMP_ANGLE),
+      );
+    else
+      euler.set(0, Math.PI, 0);
+    bone.quaternion.slerp(
+      rotation.setFromEuler(euler).multiply(
+        rotation3.setFromRotationMatrix(bone.parent?.matrixWorld || matrix.identity()),
       ),
       Math.min(MathUtils.damp(0, 1, HEAD_ROTATE_DAMP, deltaTime * LERP_SCALE), 1),
-    ).multiply(
-      rotation3.setFromRotationMatrix(bone.matrix),
-    ).multiply(
-      rotation3.copy(rotation).invert(),
-    ),
-  );
+    );
+  }
 }
 
 function updateEyeBlink(model: VRM, deltaTime: number) {
@@ -153,7 +154,7 @@ function updateIdlePose(model: VRM, deltaTime: number) {
   const totalTime = (totalTimes.get(model) || 0) + deltaTime;
   totalTimes.set(model, totalTime);
   for (const [bone, rotation] of idlePose) {
-    const node = model.humanoid.getBoneNode(bone);
+    const node = model.humanoid.getNormalizedBoneNode(bone);
     let finalRotation = rotation;
     const breathRotation = breathPose.get(bone);
     if (breathRotation)
