@@ -261,7 +261,7 @@ export function convert(data: ArrayBufferLike, vrm: VRM) {
     const [boneName, bone] = skeletonMap.get(m[1])!;
     if (boneName !== HumanoidBoneName.Hips && m[2] !== 'quaternion')
       continue;
-    const boneNode = vrm.humanoid?.getBoneNode(boneName);
+    const boneNode = vrm.humanoid?.getNormalizedBoneNode(boneName);
     if (!boneNode) continue;
     switch (m[2]) {
       case 'quaternion':
