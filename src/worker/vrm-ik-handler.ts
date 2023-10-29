@@ -107,7 +107,7 @@ export default class VRMIKHandler {
   private constructor(public model: VRM) {
     const { humanoid } = this.model;
     if (!humanoid) throw new Error('VRM does not contains humanoid');
-    this.bones = boneNameOrder.map(humanoid.getBoneNode, humanoid) as Bone[];
+    this.bones = boneNameOrder.map(humanoid.getNormalizedBoneNode, humanoid) as Bone[];
     this.root = this.bones[boneMap.get(BoneNames.Hips)!]?.parent ?? this.model.scene;
     const leftFootId = boneMap.get(BoneNames.LeftFoot)!;
     this.iks.set(leftFootId, {
